@@ -1,0 +1,206 @@
+/* RMSTORVIX IGNITE — Printable GST Invoice Stylesheet */
+@page {
+  size: A4 portrait;
+  margin: 15mm;
+}
+body {
+  margin: 0;
+  padding: 20px;
+  background: #f6f8fc;
+  color: #1a243b;
+  font: 13px/1.4 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.no-print {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  max-width: 800px;
+  margin: 0 auto 15px;
+}
+.btn-print {
+  background: #3868f6;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-close {
+  background: white;
+  color: #43526e;
+  border: 1px solid #d3d9e8;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.invoice-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #ffffff;
+  padding: 35px 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  border: 1px solid #e1e6f0;
+}
+.inv-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #20335e;
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+}
+.inv-biz-info h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  color: #101b36;
+  letter-spacing: -0.3px;
+}
+.inv-biz-info img {
+  height: 56px;
+  width: auto;
+  object-fit: contain;
+}
+.inv-biz-info p {
+  margin: 2px 0;
+  color: #55627a;
+  font-size: 11px;
+}
+.inv-title-box {
+  text-align: right;
+}
+.inv-title-box h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #3868f6;
+  letter-spacing: 1px;
+}
+.inv-title-box p {
+  margin: 2px 0 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #7b88a2;
+}
+.inv-key-val {
+  font-size: 11px;
+  line-height: 1.6;
+}
+.inv-parties {
+  display: flex;
+  margin-bottom: 20px;
+  border: 1px solid #e8ecf5;
+  border-radius: 6px;
+  padding: 12px 16px;
+  background: #fafbfe;
+}
+.inv-party-card h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #7b88a2;
+}
+.inv-party-card p {
+  margin: 3px 0;
+  font-size: 11px;
+  color: #404e67;
+}
+.inv-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+.inv-table th {
+  background: #101b36;
+  color: white;
+  text-align: left;
+  padding: 9px 8px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+.inv-table td {
+  padding: 8px 8px;
+  border-bottom: 1px solid #edf1f8;
+  font-size: 11px;
+}
+.inv-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 15px;
+}
+.inv-tax-breakdown {
+  flex: 1.2;
+}
+.inv-tax-breakdown h4 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #63728f;
+}
+.inv-tax-breakdown table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.inv-tax-breakdown td, .inv-tax-breakdown th {
+  padding: 5px 6px;
+  border-bottom: 1px dashed #e4e9f3;
+}
+.notes-text, .terms-text {
+  margin-top: 10px;
+  font-size: 10px;
+  color: #687794;
+}
+.inv-totals {
+  flex: 1;
+}
+.inv-totals table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.inv-totals td, .inv-totals th {
+  padding: 6px 8px;
+  border-bottom: 1px solid #edf1f8;
+  text-align: right;
+}
+.inv-totals td:first-child {
+  text-align: left;
+}
+.grand-total-row {
+  background: #edf2ff;
+  font-size: 13px;
+  font-weight: 800;
+  color: #1b3894;
+}
+.balance-row {
+  font-weight: 800;
+  color: #d74438;
+}
+.inv-footer {
+  margin-top: 40px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #e8ecf5;
+  padding-top: 20px;
+}
+.inv-sign {
+  text-align: center;
+  font-size: 11px;
+}
+@media print {
+  body {
+    background: white;
+    padding: 0;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .invoice-container {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+}

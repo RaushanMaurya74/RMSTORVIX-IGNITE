@@ -1,0 +1,9 @@
+.env
+/vendor/
+/node_modules/
+/storage/logs/*
+/storage/cache/*
+*.sqlite-wal
+*.sqlite-shm
+.DS_Store
+Thumbs.db

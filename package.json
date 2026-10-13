@@ -1,0 +1,24 @@
+{
+  "name": "rmstorvix-ignite",
+  "version": "1.0.0",
+  "description": "RMSTORVIX IGNITE — Complete Billing, Inventory, Accounting & Business Management SaaS",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node --experimental-sqlite server/server.js",
+    "seed": "node --experimental-sqlite server/seed.js",
+    "test": "node --experimental-sqlite tests/suite.js",
+    "backup": "node --experimental-sqlite scripts/backup.js"
+  },
+  "keywords": [
+    "rmstorvix",
+    "ignite",
+    "billing",
+    "inventory",
+    "accounting",
+    "tally-erp-9",
+    "gst",
+    "saas"
+  ],
+  "author": "RMSTORVIX Team",
+  "license": "Proprietary"
+}
