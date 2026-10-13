@@ -248,9 +248,11 @@ function renderShell({ title, activeNav, user, business, bodyContent }) {
         <!-- Profile Dropdown -->
         <div class="profile-dropdown-wrap" id="profileDropdownWrap">
           <button class="profile-topbar-btn" id="profileTopbarBtn" aria-haspopup="true" aria-expanded="false">
-            ${business && business.logo_url ? `<img src="${escapeHtml(business.logo_url)}" class="profile-topbar-logo" alt="${escapeHtml(businessName)}">` : `<span class="profile-topbar-avatar">${escapeHtml(avatarLetter)}</span>`}
-            <span class="profile-topbar-name">${escapeHtml(userName)}</span>
-            <span class="profile-caret">▾</span>
+            ${business && business.logo_url ? `<img src="${escapeHtml(business.logo_url)}" class="profile-topbar-logo" alt="${escapeHtml(businessName)}">` : `<div class="profile-topbar-avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`}
+            <div class="profile-topbar-text">
+              <span class="profile-topbar-name">${escapeHtml(userName)}</span>
+              <span class="profile-topbar-biz">${escapeHtml(businessName)} <span style="font-size:9px;color:#94a3b8;margin-left:2px;">⌄</span></span>
+            </div>
           </button>
           <div class="profile-dropdown-menu" id="profileDropdownMenu" role="menu">
             <div class="profile-dropdown-header">
@@ -804,14 +806,18 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
       <div class="sidebar-swoosh-decor"></div>
     </div>
   </aside>
+  <div class="admin-sidebar-overlay" id="adminSidebarOverlay"></div>
 
   <!-- MAIN CONTAINER (MATCHING IMAGE 1) -->
   <div class="admin-main-wrap">
     <!-- TOPBAR (MATCHING IMAGE 1) -->
     <header class="admin-topbar">
-      <div class="admin-topbar-search">
-        <span class="search-icon-left">🔍</span>
-        <input type="search" id="adminTopbarSearch" placeholder="Search businesses, users, or features..." aria-label="Search">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="admin-mobile-toggle" id="adminMobileToggleBtn" aria-label="Toggle navigation">☰</button>
+        <div class="admin-topbar-search">
+          <span class="search-icon-left">🔍</span>
+          <input type="search" id="adminTopbarSearch" placeholder="Search businesses, users, or features..." aria-label="Search">
+        </div>
       </div>
 
       <div class="admin-topbar-actions">
@@ -820,15 +826,18 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
           <span class="admin-bell-badge">3</span>
         </div>
 
-        <!-- Admin Profile Dropdown -->
+        <!-- Admin Profile Dropdown (Matching Image 1) -->
         <div class="profile-dropdown-wrap" id="adminProfileWrap">
           <button class="admin-profile-pill" id="adminProfileBtn" aria-haspopup="true" aria-expanded="false">
-            <div class="admin-avatar-circle">${(user.full_name || 'A').charAt(0).toUpperCase()}</div>
+            <div class="admin-avatar-circle">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            </div>
             <div class="admin-profile-text">
               <strong>${escapeHtml(user.full_name || 'Admin')}</strong>
-              <small>${user.platform_role === 'SUPER_ADMIN' ? 'Super Admin' : 'Platform Admin'}</small>
+              <small>${user.platform_role === 'SUPER_ADMIN' ? 'Super Admin' : 'Platform Admin'} <span style="font-size:9px;color:#94a3b8;margin-left:2px;">⌄</span></small>
             </div>
-            <span style="font-size:10px;color:#94a3b8;margin-left:4px;">▾</span>
           </button>
           <div class="profile-dropdown-menu" id="adminProfileMenu" role="menu" style="right:0;top:52px;">
             <div class="profile-dropdown-header">
@@ -1901,6 +1910,29 @@ async function handleRequest(req, res) {
       return sendJson(res, 200, { success: true, message: `Status updated to ${newStatus}` });
     }
 
+    // POST /api/admin/users/:id/status
+    const userStatusMatch = pathname.match(/^\/api\/admin\/users\/(\d+)\/status$/);
+    if (userStatusMatch && method === 'POST') {
+      const targetUserId = Number(userStatusMatch[1]);
+      const body = await parseBody(req);
+      const incoming = (body.status || '').toUpperCase();
+
+      let targetStatus = 'ACTIVE';
+      if (incoming === 'SUSPENDED' || incoming === 'DISABLED') {
+        targetStatus = 'DISABLED';
+      } else if (incoming === 'LOCKED') {
+        targetStatus = 'LOCKED';
+      } else if (incoming === 'ACTIVE') {
+        targetStatus = 'ACTIVE';
+      } else {
+        return sendJson(res, 400, { error: 'Invalid user status. Allowed: ACTIVE, DISABLED, LOCKED, SUSPENDED' });
+      }
+
+      db.prepare('UPDATE users SET account_status = ? WHERE id = ?').run(targetStatus, targetUserId);
+      logAudit(sessionUser.user_id, null, `ADMIN_SET_USER_STATUS_${targetStatus}`, 'USER', targetUserId, req);
+      return sendJson(res, 200, { success: true, message: `User status updated to ${targetStatus}`, status: targetStatus });
+    }
+
     // GET /api/admin/audit-logs
     if (pathname === '/api/admin/audit-logs' && method === 'GET') {
       const logs = db.prepare(`
@@ -1926,11 +1958,16 @@ async function handleRequest(req, res) {
       return res.end(data);
     }
 
-    // GET /admin/businesses — All Businesses management page
+    // GET /admin/businesses — All Businesses management page (Matching Image 1)
     if (pathname === '/admin/businesses' && method === 'GET') {
       const filterStatus = parsedUrl.query.status || 'ALL';
+      const totalBiz = db.prepare("SELECT COUNT(*) AS c FROM businesses").get().c;
+      const activeBiz = db.prepare("SELECT COUNT(*) AS c FROM businesses WHERE approval_status = 'APPROVED'").get().c;
+      const pendingBiz = db.prepare("SELECT COUNT(*) AS c FROM businesses WHERE approval_status = 'PENDING'").get().c;
+      const suspendedBiz = db.prepare("SELECT COUNT(*) AS c FROM businesses WHERE approval_status IN ('SUSPENDED', 'REJECTED')").get().c;
+
       const html = renderAdminShell({
-        title: 'Manage Businesses',
+        title: filterStatus === 'PENDING' ? 'Pending Approvals' : 'All Businesses',
         activeNav: filterStatus === 'PENDING' ? 'pending' : 'businesses',
         user: sessionUser,
         bodyContent: `
@@ -1940,37 +1977,84 @@ async function handleRequest(req, res) {
               <p>Manage, approve and monitor all registered business tenants on the platform.</p>
             </div>
             <div class="admin-date-filters">
-              <a href="/admin/businesses" class="btn-date-picker ${filterStatus === 'ALL' ? 'active' : ''}" style="text-decoration:none;">All</a>
-              <a href="/admin/businesses?status=PENDING" class="btn-date-picker ${filterStatus === 'PENDING' ? 'active' : ''}" style="text-decoration:none;">Pending</a>
-              <a href="/admin/businesses?status=APPROVED" class="btn-date-picker ${filterStatus === 'APPROVED' ? 'active' : ''}" style="text-decoration:none;">Approved</a>
-              <a href="/admin/businesses?status=SUSPENDED" class="btn-date-picker ${filterStatus === 'SUSPENDED' ? 'active' : ''}" style="text-decoration:none;">Suspended</a>
+              <a href="/admin/businesses" class="btn-date-picker ${filterStatus === 'ALL' ? 'active' : ''}" style="text-decoration:none;">All (${totalBiz})</a>
+              <a href="/admin/businesses?status=PENDING" class="btn-date-picker ${filterStatus === 'PENDING' ? 'active' : ''}" style="text-decoration:none;">Pending (${pendingBiz})</a>
+              <a href="/admin/businesses?status=APPROVED" class="btn-date-picker ${filterStatus === 'APPROVED' ? 'active' : ''}" style="text-decoration:none;">Approved (${activeBiz})</a>
+              <a href="/admin/businesses?status=SUSPENDED" class="btn-date-picker ${filterStatus === 'SUSPENDED' ? 'active' : ''}" style="text-decoration:none;">Suspended (${suspendedBiz})</a>
             </div>
           </div>
-          <div class="dash-panel" style="margin-top:20px;">
-            <div class="table-panel-header">
-              <div style="display:flex;align-items:center;gap:12px;">
-                <h3>Business Registrations</h3>
-                <input type="text" id="bizSearchBox" class="admin-search-input" placeholder="Search name, owner, GSTIN..." style="min-width:220px;">
+
+          <!-- TOP 4 KPI METRIC CARDS (MATCHING IMAGE 1) -->
+          <div class="kpi-row-4">
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-icon-circle blue">🏢</span>
+                <span class="kpi-title">Total Businesses</span>
               </div>
-              <span id="bizCountLabel" style="font-size:12px;color:#64748b;"></span>
+              <div class="kpi-number">${totalBiz}</div>
+              <div class="kpi-trend up">
+                <span>↑ 12%</span> <span style="color:#64748b;">vs. last month</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-icon-circle green">✓</span>
+                <span class="kpi-title">Active Accounts</span>
+              </div>
+              <div class="kpi-number">${activeBiz}</div>
+              <div class="kpi-trend up">
+                <span>↑ 10%</span> <span style="color:#64748b;">vs. last month</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-icon-circle orange">⏳</span>
+                <span class="kpi-title">Pending Approvals</span>
+              </div>
+              <div class="kpi-number">${pendingBiz}</div>
+              <div class="kpi-trend down">
+                <span>↓ 3%</span> <span style="color:#64748b;">vs. last month</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-icon-circle purple">⏸</span>
+                <span class="kpi-title">Suspended Accounts</span>
+              </div>
+              <div class="kpi-number">${suspendedBiz}</div>
+              <div class="kpi-trend down">
+                <span>→ 0%</span> <span style="color:#64748b;">vs. last month</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-panel">
+            <div class="table-panel-header">
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <h3>Business Registrations</h3>
+                <input type="text" id="bizSearchBox" class="admin-search-input" placeholder="Search name, owner, GSTIN..." style="min-width:240px;">
+              </div>
+              <span id="bizCountLabel" style="font-size:12px;color:#64748b;font-weight:600;"></span>
             </div>
             <div class="table-responsive">
               <table class="admin-data-table" id="bizMgmtTable">
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Logo</th>
-                    <th>Business Name</th>
-                    <th>Owner / Email</th>
-                    <th>GSTIN</th>
+                    <th>Business</th>
+                    <th>Owner / Contact</th>
                     <th>Type</th>
+                    <th>GSTIN</th>
                     <th>Status</th>
-                    <th>Registered</th>
-                    <th>Actions</th>
+                    <th>Applied On</th>
+                    <th style="text-align:right;">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="bizMgmtBody">
-                  <tr><td colspan="9" class="text-center" style="color:#8b9bb4;">Loading businesses…</td></tr>
+                  <tr><td colspan="8" class="text-center" style="color:#8b9bb4;padding:24px;">Loading businesses…</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1986,23 +2070,44 @@ async function handleRequest(req, res) {
               if(label) label.textContent = list.length + ' record(s)';
               const tbody = document.getElementById('bizMgmtBody');
               if(!tbody) return;
-              if(list.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="text-center">No businesses found.</td></tr>'; return; }
+              if(list.length === 0) { tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding:24px;color:#94a3b8;">No businesses found.</td></tr>'; return; }
               function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-              const statusColors = { APPROVED:'#16a34a', PENDING:'#d97706', REJECTED:'#dc2626', SUSPENDED:'#7c3aed' };
               tbody.innerHTML = list.map((b,i) => \`
                 <tr id="bizRow\${b.id}">
                   <td><strong>\${i+1}</strong></td>
-                  <td>\${b.logo_url ? \`<img src="\${esc(b.logo_url)}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;" alt="Logo">\` : \`<span style="display:grid;place-items:center;width:32px;height:32px;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:13px;font-weight:700;">\${esc(b.business_name||'?').charAt(0)}</span>\`}</td>
-                  <td><strong>\${esc(b.business_name)}</strong><br><small style="color:#64748b;">\${esc(b.city||'')} \${esc(b.state||'')}</small></td>
-                  <td>\${esc(b.owner_name)}<br><small style="color:#64748b;">\${esc(b.email)}</small></td>
-                  <td>\${b.gstin ? \`<code style="font-size:11px;">\${esc(b.gstin)}</code>\` : '<span style="color:#94a3b8;">—</span>'}</td>
-                  <td>\${esc(b.business_type||'')}</td>
-                  <td><span style="color:\${statusColors[b.approval_status]||'#64748b'};font-weight:700;font-size:12px;">\${esc(b.approval_status)}</span></td>
-                  <td>\${b.created_at ? b.created_at.slice(0,10) : '—'}</td>
-                  <td style="white-space:nowrap;">
-                    \${b.approval_status === 'PENDING' ? \`<button onclick="approveBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-tbl-action approve">Approve</button> <button onclick="rejectBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-tbl-action reject">Reject</button>\` : ''}
-                    \${b.approval_status === 'APPROVED' ? \`<button onclick="suspendBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-tbl-action reject">Suspend</button>\` : ''}
-                    \${b.approval_status === 'SUSPENDED' ? \`<button onclick="unsuspendBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-tbl-action approve">Unsuspend</button>\` : ''}
+                  <td>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      \${b.logo_url 
+                        ? \`<img src="\${esc(b.logo_url)}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;border:1px solid #e2e8f0;flex-shrink:0;" alt="Logo">\` 
+                        : \`<span style="display:grid;place-items:center;width:36px;height:36px;border-radius:8px;background:#eff6ff;color:#2563eb;font-size:16px;flex-shrink:0;">🏢</span>\`
+                      }
+                      <div>
+                        <strong>\${esc(b.business_name)}</strong>
+                        <div style="color:#64748b;font-size:11px;">\${esc(b.city || '')} \${esc(b.state ? '· ' + b.state : '')}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="font-weight:600;color:#1e293b;">\${esc(b.owner_name)}</div>
+                    <small style="color:#64748b;">\${esc(b.email)}</small>
+                  </td>
+                  <td><span style="font-size:12px;color:#475569;">\${esc(b.business_type || 'Private Limited')}</span></td>
+                  <td>\${b.gstin ? \`<code style="font-size:11px;background:#f1f5f9;padding:2px 6px;border-radius:4px;">\${esc(b.gstin)}</code>\` : '<span style="color:#94a3b8;">—</span>'}</td>
+                  <td>
+                    <span class="badge-status \${b.approval_status.toLowerCase()}">\${esc(b.approval_status)}</span>
+                  </td>
+                  <td style="font-size:11.5px;color:#64748b;">\${b.created_at ? b.created_at.slice(0,10) : '—'}</td>
+                  <td style="text-align:right;white-space:nowrap;">
+                    \${b.approval_status === 'PENDING' ? \`
+                      <button onclick="approveBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-action-pill green">Approve</button>
+                      <button onclick="rejectBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-action-pill red">Reject</button>
+                    \` : ''}
+                    \${b.approval_status === 'APPROVED' ? \`
+                      <button onclick="suspendBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-action-pill orange">Suspend</button>
+                    \` : ''}
+                    \${b.approval_status === 'SUSPENDED' ? \`
+                      <button onclick="unsuspendBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-action-pill green">Activate</button>
+                    \` : ''}
                   </td>
                 </tr>
               \`).join('');
@@ -2018,13 +2123,13 @@ async function handleRequest(req, res) {
               if(!confirm('Approve "' + name + '"?')) return;
               const r = await fetch('/api/admin/businesses/' + id + '/approve', {method:'POST'});
               const d = await r.json(); if(!r.ok) { alert(d.error); return; }
-              alert('"' + name + '" approved!'); location.reload();
+              location.reload();
             }
             async function rejectBiz(id, name) {
               const reason = prompt('Rejection reason for "' + name + '":'); if(!reason) return;
               const r = await fetch('/api/admin/businesses/' + id + '/reject', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({reason})});
               const d = await r.json(); if(!r.ok) { alert(d.error); return; }
-              alert('"' + name + '" rejected.'); location.reload();
+              location.reload();
             }
             async function suspendBiz(id, name) {
               if(!confirm('Suspend "' + name + '"?')) return;
@@ -2042,13 +2147,20 @@ async function handleRequest(req, res) {
       return sendHtml(res, 200, html);
     }
 
-    // GET /admin/users — User Management page
+    // GET /admin/users — User Management page (Matching Image 1)
     if (pathname === '/admin/users' && method === 'GET') {
       const users = db.prepare(`
         SELECT u.*, b.business_name FROM users u
         LEFT JOIN businesses b ON b.id = u.business_id
         ORDER BY u.id DESC LIMIT 100
       `).all();
+
+      const totalUsers = users.length;
+      const activeUsers = users.filter(u => u.account_status === 'ACTIVE').length;
+      const ownerUsers = users.filter(u => u.business_role === 'OWNER').length;
+      const adminUsers = users.filter(u => u.platform_role === 'SUPER_ADMIN').length;
+      const staffUsers = users.filter(u => ['MANAGER', 'CASHIER', 'ACCOUNTANT', 'STAFF'].includes(u.business_role)).length;
+
       const html = renderAdminShell({
         title: 'User Management',
         activeNav: 'users',
@@ -2059,37 +2171,104 @@ async function handleRequest(req, res) {
               <h1>User Management</h1>
               <p>View and manage all registered users across all business tenants.</p>
             </div>
+            <div class="admin-date-filters">
+              <button class="btn-date-picker active" onclick="filterRole('ALL', this)">All (${totalUsers})</button>
+              <button class="btn-date-picker" onclick="filterRole('OWNER', this)">Owners (${ownerUsers})</button>
+              <button class="btn-date-picker" onclick="filterRole('STAFF', this)">Staff (${staffUsers})</button>
+              <button class="btn-date-picker" onclick="filterRole('SUPER_ADMIN', this)">Admins (${adminUsers})</button>
+            </div>
           </div>
-          <div class="dash-panel" style="margin-top:20px;">
+
+          <!-- TOP 4 KPI CARDS (MATCHING IMAGE 1) -->
+          <div class="kpi-row-4">
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-icon-circle blue">👥</span>
+                <span class="kpi-title">Total Users</span>
+              </div>
+              <div class="kpi-number">${totalUsers}</div>
+              <div class="kpi-trend up"><span>All platform users</span></div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-icon-circle green">✓</span>
+                <span class="kpi-title">Active Accounts</span>
+              </div>
+              <div class="kpi-number">${activeUsers}</div>
+              <div class="kpi-trend up"><span>↑ Operational</span></div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-icon-circle orange">🏢</span>
+                <span class="kpi-title">Business Owners</span>
+              </div>
+              <div class="kpi-number">${ownerUsers}</div>
+              <div class="kpi-trend up"><span>Tenant primary</span></div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-icon-circle purple">🛡️</span>
+                <span class="kpi-title">Platform Admins</span>
+              </div>
+              <div class="kpi-number">${adminUsers}</div>
+              <div class="kpi-trend up"><span>Full system control</span></div>
+            </div>
+          </div>
+
+          <div class="dash-panel">
             <div class="table-panel-header">
-              <h3>Platform Users (${users.length})</h3>
-              <input type="text" id="usrSearch" class="admin-search-input" placeholder="Search by name, email or business...">
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <h3>Platform Users (${totalUsers})</h3>
+                <input type="text" id="usrSearch" class="admin-search-input" placeholder="Search by name, email or business..." style="min-width:260px;">
+              </div>
             </div>
             <div class="table-responsive">
               <table class="admin-data-table">
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>Business</th>
+                    <th>User</th>
+                    <th>Email / Contact</th>
+                    <th>Business Workspace</th>
                     <th>Platform Role</th>
                     <th>Business Role</th>
                     <th>Status</th>
                     <th>Last Login</th>
+                    <th style="text-align:right;">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="usrTableBody">
                   ${users.map((u, i) => `
-                    <tr>
-                      <td>${i + 1}</td>
-                      <td><strong>${escapeHtml(u.full_name)}</strong></td>
-                      <td>${escapeHtml(u.email)}</td>
-                      <td>${escapeHtml(u.business_name || '— Platform —')}</td>
-                      <td><span style="font-size:11px;font-weight:700;color:${u.platform_role === 'SUPER_ADMIN' ? '#c084fc' : '#60a5fa'};">${escapeHtml(u.platform_role)}</span></td>
-                      <td>${escapeHtml(u.business_role)}</td>
-                      <td><span style="font-weight:700;font-size:11px;color:${u.account_status === 'ACTIVE' ? '#34d399' : '#f87171'};">${escapeHtml(u.account_status)}</span></td>
-                      <td>${u.last_login_at ? u.last_login_at.slice(0, 16).replace('T', ' ') : '—'}</td>
+                    <tr class="user-row" data-role="${escapeHtml(u.business_role)}" data-platform="${escapeHtml(u.platform_role)}">
+                      <td><strong>${i + 1}</strong></td>
+                      <td>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                          <div class="admin-avatar-circle" style="width:32px;height:32px;font-size:12px;background:#1e293b;color:#ffffff;flex-shrink:0;">
+                            ${escapeHtml((u.full_name || 'U').charAt(0).toUpperCase())}
+                          </div>
+                          <strong>${escapeHtml(u.full_name)}</strong>
+                        </div>
+                      </td>
+                      <td>
+                        <div style="color:#1e293b;font-weight:500;">${escapeHtml(u.email)}</div>
+                        <small style="color:#64748b;">${escapeHtml(u.mobile || '—')}</small>
+                      </td>
+                      <td>${u.business_name ? `<strong>${escapeHtml(u.business_name)}</strong>` : '<span style="color:#94a3b8;">— Platform Control —</span>'}</td>
+                      <td><span class="badge-status ${u.platform_role === 'SUPER_ADMIN' ? 'purple' : 'blue'}">${escapeHtml(u.platform_role)}</span></td>
+                      <td><span class="badge-status ${u.business_role === 'OWNER' ? 'orange' : 'green'}">${escapeHtml(u.business_role)}</span></td>
+                      <td><span class="badge-status ${u.account_status === 'ACTIVE' ? 'green' : 'red'}">${escapeHtml(u.account_status === 'DISABLED' ? 'SUSPENDED' : u.account_status)}</span></td>
+                      <td style="font-size:11.5px;color:#64748b;">${u.last_login_at ? u.last_login_at.slice(0, 16).replace('T', ' ') : '—'}</td>
+                      <td style="text-align:right;white-space:nowrap;">
+                        ${u.platform_role !== 'SUPER_ADMIN' ? `
+                          ${u.account_status === 'ACTIVE' 
+                            ? `<button class="btn-action-pill orange" onclick="toggleUser(${u.id},'SUSPENDED','${escapeHtml(u.full_name)}')">Suspend</button>` 
+                            : `<button class="btn-action-pill green" onclick="toggleUser(${u.id},'ACTIVE','${escapeHtml(u.full_name)}')">Activate</button>`
+                          }
+                        ` : '<span style="font-size:11px;color:#94a3b8;">Protected</span>'}
+                      </td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -2097,12 +2276,38 @@ async function handleRequest(req, res) {
             </div>
           </div>
           <script>
+            // Live Search
             document.getElementById('usrSearch').addEventListener('input', function() {
               const q = this.value.toLowerCase();
-              Array.from(document.getElementById('usrTableBody').querySelectorAll('tr')).forEach(tr => {
+              Array.from(document.querySelectorAll('#usrTableBody tr.user-row')).forEach(tr => {
                 tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
               });
             });
+
+            // Filter by role
+            function filterRole(role, btn) {
+              document.querySelectorAll('.admin-date-filters button').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              Array.from(document.querySelectorAll('#usrTableBody tr.user-row')).forEach(tr => {
+                if (role === 'ALL') tr.style.display = '';
+                else if (role === 'SUPER_ADMIN') tr.style.display = tr.dataset.platform === 'SUPER_ADMIN' ? '' : 'none';
+                else if (role === 'OWNER') tr.style.display = tr.dataset.role === 'OWNER' ? '' : 'none';
+                else if (role === 'STAFF') tr.style.display = ['MANAGER', 'CASHIER', 'ACCOUNTANT', 'STAFF'].includes(tr.dataset.role) ? '' : 'none';
+              });
+            }
+
+            async function toggleUser(id, newStatus, name) {
+              const action = newStatus === 'ACTIVE' ? 'activate' : 'suspend';
+              if (!confirm('Are you sure you want to ' + action + ' user "' + name + '"?')) return;
+              const res = await fetch('/api/admin/users/' + id + '/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+              });
+              const d = await res.json();
+              if (!res.ok) { alert(d.error || 'Failed to update user'); return; }
+              location.reload();
+            }
           </script>
         `
       });

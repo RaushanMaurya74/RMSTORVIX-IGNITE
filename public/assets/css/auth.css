@@ -585,7 +585,17 @@ body.auth-split-body {
 /* Responsive */
 @media (max-width: 960px) {
   body.auth-split-body { flex-direction: column; }
+  .auth-container { flex-direction: column; min-height: 100vh; }
   .auth-hero { display: none; }
-  .auth-form-side { width: 100%; padding: 32px 16px; }
-  .top-auth-link { position: static; margin-bottom: 16px; text-align: center; }
+  .auth-form-side { width: 100%; padding: 36px 20px; }
+  .auth-form-box { max-width: 100%; }
+  .top-auth-link { position: static; margin-bottom: 20px; text-align: center; }
 }
+
+@media (max-width: 600px) {
+  .auth-form-side { padding: 24px 16px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .col-span-2 { grid-column: span 1; }
+  .auth-social-row { flex-direction: column; }
+}
+

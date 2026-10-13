@@ -2,11 +2,31 @@
 // Keyboard Shortcuts (Tally ERP 9) · Reactive Forms · Modals · Dynamic Charts & Analytics
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Sidebar Toggle
+  // 1. Sidebar Toggle & Mobile Drawer Overlay
   const menuToggle = document.getElementById('menuToggle');
   const sidebar = document.getElementById('sidebar');
+  let overlay = document.getElementById('sidebarOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'sidebarOverlay';
+    overlay.className = 'sidebar-overlay';
+    document.body.appendChild(overlay);
+  }
   if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.add('open');
+      overlay.classList.add('open');
+    });
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+      }
+    });
   }
 
   // 2. Theme Toggle (Light / Dark)

@@ -24,6 +24,30 @@ async function initAdminDashboard() {
 }
 
 function setupEventListeners() {
+  // Mobile sidebar drawer
+  const adminMobileBtn = document.getElementById('adminMobileToggleBtn');
+  const adminSidebar = document.getElementById('adminSidebar');
+  const adminOverlay = document.getElementById('adminSidebarOverlay');
+  const adminSidebarToggle = document.getElementById('adminSidebarToggle');
+
+  function openAdminSidebar() {
+    if (adminSidebar) adminSidebar.classList.add('mobile-open');
+    if (adminOverlay) adminOverlay.classList.add('open');
+  }
+  function closeAdminSidebar() {
+    if (adminSidebar) adminSidebar.classList.remove('mobile-open');
+    if (adminOverlay) adminOverlay.classList.remove('open');
+  }
+
+  if (adminMobileBtn) adminMobileBtn.addEventListener('click', openAdminSidebar);
+  if (adminSidebarToggle) adminSidebarToggle.addEventListener('click', () => {
+    if (window.innerWidth <= 1024) closeAdminSidebar();
+  });
+  if (adminOverlay) adminOverlay.addEventListener('click', closeAdminSidebar);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAdminSidebar();
+  });
+
   // Admin Profile dropdown toggle
   const adminProfWrap = document.getElementById('adminProfileWrap');
   const adminProfBtn = document.getElementById('adminProfileBtn');
