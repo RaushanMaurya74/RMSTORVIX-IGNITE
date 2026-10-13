@@ -140,7 +140,7 @@ declare(strict_types=1);
           <label>Email / Username</label>
           <div class="auth-input-wrap">
             <span class="auth-input-icon">👤</span>
-            <input type="email" name="email" value="<?= htmlspecialchars($email ?? 'admin@rmstorvix.com') ?>" required placeholder="Enter your email or admin username" autocomplete="username" autofocus>
+            <input type="email" name="email" value="<?= htmlspecialchars($email ?? '') ?>" required placeholder="Enter your email or admin username" autocomplete="username" autofocus>
           </div>
         </div>
 
@@ -148,7 +148,7 @@ declare(strict_types=1);
           <label>Password</label>
           <div class="auth-input-wrap">
             <span class="auth-input-icon">🔒</span>
-            <input type="password" id="adminPassInput" name="password" required placeholder="Enter your password" autocomplete="current-password" value="SuperAdmin@2026!">
+            <input type="password" id="adminPassInput" name="password" required placeholder="Enter your password" autocomplete="current-password" value="">
             <button type="button" class="auth-input-toggle" onclick="togglePasswordVisibility('adminPassInput', this)" aria-label="Toggle password view">👁</button>
           </div>
         </div>

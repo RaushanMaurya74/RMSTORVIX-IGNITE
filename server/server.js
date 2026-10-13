@@ -318,6 +318,82 @@ function renderShell({ title, activeNav, user, business, bodyContent }) {
   </div>
 </div>
 
+<!-- Profile & Business Settings Slide-out Drawer (Hidden by default, slides in on click) -->
+<div id="profileSliderBackdrop" class="slider-backdrop"></div>
+<aside id="profileSliderDrawer" class="profile-slider-drawer" role="dialog" aria-label="Profile and Settings">
+  <div class="slider-drawer-header">
+    <h3><span>⚙️</span> Workspace & Settings</h3>
+    <button class="slider-drawer-close" id="profileSliderCloseBtn" aria-label="Close drawer">✕</button>
+  </div>
+  <div class="slider-drawer-body">
+    <div class="slider-user-card">
+      <div class="slider-user-avatar">
+        ${business && business.logo_url 
+          ? `<img src="${escapeHtml(business.logo_url)}" alt="${escapeHtml(businessName)}">` 
+          : escapeHtml((userName[0] || 'U').toUpperCase())}
+      </div>
+      <div class="slider-user-info">
+        <strong class="slider-user-name">${escapeHtml(userName)}</strong>
+        <span class="slider-user-biz">${escapeHtml(businessName)}</span>
+        <span class="slider-user-role-badge">${escapeHtml(roleName)}</span>
+      </div>
+    </div>
+
+    <div class="slider-menu-group">
+      <div class="slider-menu-label">Workspace Settings</div>
+      <a href="/profile" class="slider-menu-item">
+        <div class="slider-menu-icon">👤</div>
+        <div class="slider-menu-content">
+          <strong class="slider-menu-title">My Profile & Company Logo</strong>
+          <small class="slider-menu-desc">Personal details, contact & business branding logo</small>
+        </div>
+        <span>→</span>
+      </a>
+
+      <a href="/settings" class="slider-menu-item">
+        <div class="slider-menu-icon">⚙️</div>
+        <div class="slider-menu-content">
+          <strong class="slider-menu-title">Business Settings & Signature</strong>
+          <small class="slider-menu-desc">GSTIN, invoice prefixes, digital signature & official stamp</small>
+        </div>
+        <span>→</span>
+      </a>
+
+      ${user && ['SUPER_ADMIN', 'PLATFORM_ADMIN'].includes(user.platform_role) ? `
+      <a href="/admin" class="slider-menu-item">
+        <div class="slider-menu-icon" style="background:rgba(255,87,34,0.1);color:#ff5722;">🛡️</div>
+        <div class="slider-menu-content">
+          <strong class="slider-menu-title">Platform Command Center</strong>
+          <small class="slider-menu-desc">Manage tenants, system users & platform health</small>
+        </div>
+        <span>→</span>
+      </a>
+      ` : ''}
+    </div>
+
+    <div class="slider-menu-group">
+      <div class="slider-menu-label">System Preferences</div>
+      <div class="slider-menu-item" style="cursor:pointer;" onclick="document.getElementById('themeToggle').click();">
+        <div class="slider-menu-icon">◐</div>
+        <div class="slider-menu-content">
+          <strong class="slider-menu-title">Toggle Dark / Light Theme</strong>
+          <small class="slider-menu-desc">Switch high-contrast theme</small>
+        </div>
+      </div>
+      <div class="slider-menu-item" style="cursor:pointer;" onclick="document.getElementById('shortcutsModal').style.display='flex';">
+        <div class="slider-menu-icon">⌨</div>
+        <div class="slider-menu-content">
+          <strong class="slider-menu-title">Tally ERP 9 Shortcuts</strong>
+          <small class="slider-menu-desc">View keyboard commands cheat sheet (F1-F9)</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slider-drawer-footer">
+    <button class="slider-logout-btn" id="drawerLogoutBtn">⏻ Sign Out of Workspace</button>
+  </div>
+</aside>
+
 <script src="/assets/js/app.js"></script>
 </body>
 </html>`;
@@ -441,7 +517,7 @@ function renderAuthPage({ title, formContent, alertMessage = null, alertType = '
       ${isSignup ? `Already registered? <a href="/login">Sign In →</a>` : `New to RMSTORVIX IGNITE? <a href="/signup">Create an Account →</a>`}
     </div>
 
-    <div class="auth-card-clean">
+    <div class="auth-card-clean ${isSignup ? 'auth-form-wide' : ''}">
       <div class="auth-card-header">
         <div class="auth-card-logo">
           <img src="/assets/images/logo.png" alt="RMSTORVIX IGNITE">
@@ -455,10 +531,12 @@ function renderAuthPage({ title, formContent, alertMessage = null, alertType = '
 
       ${formContent}
 
+      ${isSignup ? `
       <div class="auth-notice-box">
         <span>ℹ</span>
-        <div><strong>Your account is pending approval:</strong> You will be able to access the system once an administrator approves your registration.</div>
+        <div><strong>Your business registration enters pending approval:</strong> You will be able to log in once a Platform Administrator reviews and activates your workspace.</div>
       </div>
+      ` : ''}
     </div>
 
     <div class="auth-footer-note">
@@ -608,7 +686,7 @@ function renderAdminLoginPage({ alertMessage = null }) {
           <label>Email / Username</label>
           <div class="auth-input-wrap">
             <span class="auth-input-icon">👤</span>
-            <input type="email" name="email" value="admin@rmstorvix.com" required placeholder="Enter your email or admin username" autocomplete="username">
+            <input type="email" name="email" value="" required placeholder="Enter your email or admin username" autocomplete="username">
           </div>
         </div>
 
@@ -616,7 +694,7 @@ function renderAdminLoginPage({ alertMessage = null }) {
           <label>Password</label>
           <div class="auth-input-wrap">
             <span class="auth-input-icon">🔒</span>
-            <input type="password" name="password" id="adminPasswordInput" required placeholder="Enter your password" autocomplete="current-password" value="SuperAdmin@2026!">
+            <input type="password" name="password" id="adminPasswordInput" required placeholder="Enter your password" autocomplete="current-password" value="">
             <button type="button" class="auth-input-toggle" onclick="togglePass('adminPasswordInput', this)">👁</button>
           </div>
         </div>
@@ -871,6 +949,90 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
     </footer>
   </div>
 </div>
+<!-- Admin Profile & Settings Slide-out Drawer (Hidden by default, slides in on click) -->
+<div id="adminProfileSliderBackdrop" class="slider-backdrop"></div>
+<aside id="adminProfileSliderDrawer" class="profile-slider-drawer" role="dialog" aria-label="Admin Profile and Control">
+  <div class="slider-drawer-header">
+    <h3><span>🛡️</span> Admin Console</h3>
+    <button class="slider-drawer-close" id="adminProfileSliderCloseBtn" aria-label="Close drawer">✕</button>
+  </div>
+  <div class="slider-drawer-body">
+    <div class="slider-user-card" style="background:linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);">
+      <div class="slider-user-avatar" style="background:#7c3aed;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </div>
+      <div class="slider-user-info">
+        <strong class="slider-user-name">${escapeHtml(user.full_name || 'Super Admin')}</strong>
+        <span class="slider-user-biz">${escapeHtml(user.email || 'admin@rmstorvix.com')}</span>
+        <span class="slider-user-role-badge" style="background:rgba(124,58,237,0.25);border-color:#a78bfa;color:#c4b5fd;">Platform Super Admin</span>
+      </div>
+    </div>
+
+    <div class="slider-menu-group">
+      <div class="slider-menu-label">Admin Portals</div>
+      <a href="/admin" class="slider-menu-item">
+        <div class="slider-menu-icon" style="background:rgba(37,99,235,0.1);color:#2563eb;">🏠</div>
+        <div class="slider-menu-content">
+          <strong class="slider-menu-title">Command Center Dashboard</strong>
+          <small class="slider-menu-desc">Platform health, revenue & active metrics</small>
+        </div>
+        <span>→</span>
+      </a>
+
+      <a href="/admin/businesses" class="slider-menu-item">
+        <div class="slider-menu-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">🏢</div>
+        <div class="slider-menu-content">
+          <strong class="slider-menu-title">Manage Businesses</strong>
+          <small class="slider-menu-desc">Approvals, onboarding & tenant compliance</small>
+        </div>
+        <span>→</span>
+      </a>
+
+      <a href="/admin/users" class="slider-menu-item">
+        <div class="slider-menu-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6;">👥</div>
+        <div class="slider-menu-content">
+          <strong class="slider-menu-title">Manage Users</strong>
+          <small class="slider-menu-desc">Account status, roles & authentication</small>
+        </div>
+        <span>→</span>
+      </a>
+
+      <a href="/admin/reports" class="slider-menu-item">
+        <div class="slider-menu-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">📊</div>
+        <div class="slider-menu-content">
+          <strong class="slider-menu-title">Platform Reports & Analytics</strong>
+          <small class="slider-menu-desc">System analytics, revenue & statistics</small>
+        </div>
+        <span>→</span>
+      </a>
+
+      <a href="/admin/audit-logs" class="slider-menu-item">
+        <div class="slider-menu-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;">📜</div>
+        <div class="slider-menu-content">
+          <strong class="slider-menu-title">Security & Audit Logs</strong>
+          <small class="slider-menu-desc">Security events, logins & actions</small>
+        </div>
+        <span>→</span>
+      </a>
+    </div>
+
+    <div class="slider-menu-group">
+      <div class="slider-menu-label">Tenant Switcher</div>
+      <a href="/dashboard" class="slider-menu-item">
+        <div class="slider-menu-icon">🏢</div>
+        <div class="slider-menu-content">
+          <strong class="slider-menu-title">Open Business Workspace</strong>
+          <small class="slider-menu-desc">Switch to primary tenant ERP billing view</small>
+        </div>
+        <span>→</span>
+      </a>
+    </div>
+  </div>
+  <div class="slider-drawer-footer">
+    <button class="slider-logout-btn" onclick="if(confirm('Are you sure you want to sign out of the Admin Console?')) window.location.href='/admin/logout';">⏻ Sign Out of Admin Console</button>
+  </div>
+</aside>
+
 <script src="/assets/js/admin.js"></script>
 </body>
 </html>`;
@@ -1271,7 +1433,7 @@ async function handleRequest(req, res) {
             <label>Email or Mobile Number</label>
             <div class="auth-input-wrap">
               <span class="auth-input-icon">✉️</span>
-              <input type="text" name="email" required autocomplete="username" placeholder="Enter your email or mobile number" value="owner@rmstorvix.com" autofocus>
+              <input type="text" name="email" required autocomplete="username" placeholder="Enter your registered email or mobile number" value="" autofocus>
             </div>
           </div>
 
@@ -1279,7 +1441,7 @@ async function handleRequest(req, res) {
             <label>Password</label>
             <div class="auth-input-wrap">
               <span class="auth-input-icon">🔒</span>
-              <input type="password" id="tenantLoginPass" name="password" required autocomplete="current-password" placeholder="Enter your password" value="DemoOwner@2026!">
+              <input type="password" id="tenantLoginPass" name="password" required autocomplete="current-password" placeholder="Enter your password" value="">
               <button type="button" class="auth-input-toggle" onclick="togglePasswordVisibility('tenantLoginPass', this)" aria-label="Toggle password view">👁</button>
             </div>
           </div>
@@ -1306,12 +1468,6 @@ async function handleRequest(req, res) {
           <button type="button" class="btn-social" onclick="alert('OTP Login will send an authentication SMS to your registered phone number.');">
             <span>📱</span> Continue with OTP
           </button>
-        </div>
-
-        <div class="demo-creds" style="margin-top:14px;padding:10px 12px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;font-size:11px;color:#475569;">
-          <strong>Quick Demo Credentials:</strong>
-          <div>Tenant Owner: <code>owner@rmstorvix.com</code> / <code>DemoOwner@2026!</code></div>
-          <div>Platform Super Admin: <a href="/admin/login" style="color:#ff5722;font-weight:700;">Admin Portal Login →</a></div>
         </div>
       `
     });
@@ -1375,6 +1531,7 @@ async function handleRequest(req, res) {
   if (pathname === '/signup' && method === 'GET') {
     const html = renderAuthPage({
       title: 'Register Your Business',
+      isSignup: true,
       formContent: `
         <form id="signupForm" method="POST" action="/api/auth/signup">
           <div class="form-grid">
@@ -1429,17 +1586,20 @@ async function handleRequest(req, res) {
             <label class="col-span-2">Account Password (10+ characters) *
               <input type="password" name="password" required placeholder="••••••••••••" minlength="10">
             </label>
-            <div class="col-span-2" style="margin-top:4px;">
-              <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12.5px;">Company / Business Logo (Optional)</label>
-              <div style="display:flex;align-items:center;gap:14px;background:#f8fafc;padding:12px 14px;border:1px dashed #cbd5e1;border-radius:8px;">
-                <div id="signupLogoPreviewWrap" style="width:52px;height:52px;border-radius:8px;background:#e2e8f0;display:grid;place-items:center;font-size:22px;overflow:hidden;flex-shrink:0;">
+            <div class="col-span-2" style="margin-top:6px;">
+              <label style="display:block;font-weight:700;margin-bottom:6px;font-size:12.5px;color:#334155;">Company / Business Brand Logo (Optional)</label>
+              <div class="logo-upload-card">
+                <div id="signupLogoPreviewWrap" class="logo-preview-box">
                   <span id="signupLogoPlaceholder">🏢</span>
                   <img id="signupLogoPreviewImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;" alt="Preview">
                 </div>
                 <div style="flex:1;">
-                  <input type="file" id="signupLogoFileInput" accept="image/png,image/jpeg,image/webp" style="font-size:12px;color:#475569;">
+                  <label style="padding:6px 14px;font-size:12px;display:inline-block;cursor:pointer;margin:0 0 6px 0;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:7px;font-weight:700;color:#334155;">
+                    📁 Choose Brand Logo
+                    <input type="file" id="signupLogoFileInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
+                  </label>
                   <input type="hidden" name="logo_url" id="signupLogoHidden">
-                  <div style="font-size:11px;color:#64748b;margin-top:4px;">PNG, JPG, or WEBP up to 2MB. Displayed on invoices & topbar.</div>
+                  <div style="font-size:11px;color:#64748b;">PNG, JPG or WEBP (up to 2MB). Automatically displayed on GST invoices & workspace.</div>
                 </div>
               </div>
             </div>
@@ -1447,10 +1607,12 @@ async function handleRequest(req, res) {
           <div class="consent-box">
             <label>
               <input type="checkbox" name="consent" required>
-              I agree to the Terms of Service. I understand that my business registration enters <strong>PENDING APPROVAL</strong> status and will be verified by a Platform Administrator before activation.
+              <span>I agree to the Terms of Service. I understand that my business registration enters <strong>PENDING APPROVAL</strong> status and will be verified by a Platform Administrator before activation.</span>
             </label>
           </div>
-          <button type="submit" class="button button-primary w-100">Submit Business for Verification</button>
+          <button type="submit" class="btn-signup-submit" id="signupSubmitBtn">
+            <span>→</span> Submit Business for Verification
+          </button>
         </form>
         <p class="muted-note">Already registered? <a href="/login" class="text-link">Sign in here →</a></p>
         <script>

@@ -48,14 +48,48 @@ function setupEventListeners() {
     if (e.key === 'Escape') closeAdminSidebar();
   });
 
-  // Admin Profile dropdown toggle
+  // Admin Profile & Settings Slide Drawer
+  const adminProfileDrawer = document.getElementById('adminProfileSliderDrawer');
+  const adminProfileBackdrop = document.getElementById('adminProfileSliderBackdrop');
+  const adminProfileCloseBtn = document.getElementById('adminProfileSliderCloseBtn');
+  const adminProfilePill = document.querySelector('.admin-profile-pill');
+
+  function openAdminProfileDrawer() {
+    if (adminProfileDrawer && adminProfileBackdrop) {
+      adminProfileDrawer.classList.add('open');
+      adminProfileBackdrop.classList.add('open');
+    }
+  }
+
+  function closeAdminProfileDrawer() {
+    if (adminProfileDrawer && adminProfileBackdrop) {
+      adminProfileDrawer.classList.remove('open');
+      adminProfileBackdrop.classList.remove('open');
+    }
+  }
+
+  if (adminProfilePill) {
+    adminProfilePill.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openAdminProfileDrawer();
+    });
+  }
+
+  if (adminProfileCloseBtn) adminProfileCloseBtn.addEventListener('click', closeAdminProfileDrawer);
+  if (adminProfileBackdrop) adminProfileBackdrop.addEventListener('click', closeAdminProfileDrawer);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAdminProfileDrawer();
+  });
+
+  // Admin Profile dropdown fallback toggle
   const adminProfWrap = document.getElementById('adminProfileWrap');
   const adminProfBtn = document.getElementById('adminProfileBtn');
   if (adminProfWrap && adminProfBtn) {
     adminProfBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const isOpen = adminProfWrap.classList.toggle('open');
-      adminProfBtn.setAttribute('aria-expanded', isOpen);
+      openAdminProfileDrawer();
     });
     document.addEventListener('click', (e) => {
       if (!adminProfWrap.contains(e.target)) {

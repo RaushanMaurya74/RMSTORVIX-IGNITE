@@ -141,7 +141,7 @@ declare(strict_types=1);
           <label>Email or Mobile Number</label>
           <div class="auth-input-wrap">
             <span class="auth-input-icon">✉️</span>
-            <input type="text" name="email" required autocomplete="username" placeholder="Enter your email or mobile number" value="<?= htmlspecialchars($email ?? 'owner@rmstorvix.com') ?>" autofocus>
+            <input type="text" name="email" required autocomplete="username" placeholder="Enter your registered email or mobile number" value="<?= htmlspecialchars($email ?? '') ?>" autofocus>
           </div>
         </div>
 
@@ -149,7 +149,7 @@ declare(strict_types=1);
           <label>Password</label>
           <div class="auth-input-wrap">
             <span class="auth-input-icon">🔒</span>
-            <input type="password" id="tenantLoginPass" name="password" required autocomplete="current-password" placeholder="Enter your password" value="DemoOwner@2026!">
+            <input type="password" id="tenantLoginPass" name="password" required autocomplete="current-password" placeholder="Enter your password" value="">
             <button type="button" class="auth-input-toggle" onclick="togglePasswordVisibility('tenantLoginPass', this)" aria-label="Toggle password view">👁</button>
           </div>
         </div>

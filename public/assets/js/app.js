@@ -53,6 +53,60 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 3b. Profile & Settings Slide-out Drawer Controller (Hidden by default, slides on click)
+  const profileDrawer = document.getElementById('profileSliderDrawer');
+  const profileBackdrop = document.getElementById('profileSliderBackdrop');
+  const profileCloseBtn = document.getElementById('profileSliderCloseBtn');
+  const profileTopbarBtn = document.getElementById('profileTopbarBtn');
+  const sidebarUserProfile = document.querySelector('.sidebar .user-profile');
+  const drawerLogoutBtn = document.getElementById('drawerLogoutBtn');
+
+  function openProfileDrawer() {
+    if (profileDrawer && profileBackdrop) {
+      profileDrawer.classList.add('open');
+      profileBackdrop.classList.add('open');
+    }
+  }
+
+  function closeProfileDrawer() {
+    if (profileDrawer && profileBackdrop) {
+      profileDrawer.classList.remove('open');
+      profileBackdrop.classList.remove('open');
+    }
+  }
+
+  if (profileTopbarBtn) {
+    profileTopbarBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openProfileDrawer();
+    });
+  }
+
+  if (sidebarUserProfile) {
+    sidebarUserProfile.style.cursor = 'pointer';
+    sidebarUserProfile.addEventListener('click', (e) => {
+      if (e.target.id === 'logoutBtn' || e.target.closest('#logoutBtn')) return;
+      openProfileDrawer();
+    });
+  }
+
+  if (profileCloseBtn) profileCloseBtn.addEventListener('click', closeProfileDrawer);
+  if (profileBackdrop) profileBackdrop.addEventListener('click', closeProfileDrawer);
+
+  if (drawerLogoutBtn) {
+    drawerLogoutBtn.addEventListener('click', async () => {
+      if (confirm('Are you sure you want to sign out?')) {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/login';
+      }
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeProfileDrawer();
+  });
+
   // 4. Modal Engine
   const modalOverlay = document.getElementById('modalOverlay');
   const modalCard = document.getElementById('modalCard');
