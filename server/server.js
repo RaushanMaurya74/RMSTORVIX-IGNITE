@@ -245,6 +245,26 @@ function renderShell({ title, activeNav, user, business, bodyContent }) {
         </label>
         <button class="icon-button" id="quickActionHeaderBtn" title="Quick Action (F8 New Invoice)">＋</button>
         <button class="theme-toggle" id="themeToggle" aria-label="Toggle light or dark theme" title="Toggle Theme">◐</button>
+        <!-- Profile Dropdown -->
+        <div class="profile-dropdown-wrap" id="profileDropdownWrap">
+          <button class="profile-topbar-btn" id="profileTopbarBtn" aria-haspopup="true" aria-expanded="false">
+            ${business && business.logo_url ? `<img src="${escapeHtml(business.logo_url)}" class="profile-topbar-logo" alt="${escapeHtml(businessName)}">` : `<span class="profile-topbar-avatar">${escapeHtml(avatarLetter)}</span>`}
+            <span class="profile-topbar-name">${escapeHtml(userName)}</span>
+            <span class="profile-caret">▾</span>
+          </button>
+          <div class="profile-dropdown-menu" id="profileDropdownMenu" role="menu">
+            <div class="profile-dropdown-header">
+              <div class="profile-dropdown-biz">${escapeHtml(businessName)}</div>
+              <div class="profile-dropdown-role">${escapeHtml(roleName)}</div>
+              <div class="profile-dropdown-email" style="font-size:10px;color:#94a3b8;">${escapeHtml(user.email || '')}</div>
+            </div>
+            <div class="profile-dropdown-divider"></div>
+            <a href="/profile" class="profile-dropdown-item" role="menuitem">👤 My Profile</a>
+            <a href="/settings" class="profile-dropdown-item" role="menuitem">⚙️ Business Settings</a>
+            <div class="profile-dropdown-divider"></div>
+            <button class="profile-dropdown-item profile-dropdown-logout" id="profileLogoutBtn" role="menuitem">⏻ Sign Out</button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -696,7 +716,7 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
     <!-- Group: Dashboard -->
     <div class="admin-nav-group">
       <div class="admin-nav-list">
-        <a class="admin-nav-link active" href="/admin">
+        <a class="admin-nav-link ${activeNav === 'overview' ? 'active' : ''}" href="/admin">
           <span class="admin-nav-link-icon">🏠</span>
           <span>Dashboard</span>
         </a>
@@ -710,22 +730,18 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
         <span class="admin-nav-badge" id="sidebarPendingBadge">12</span>
       </div>
       <div class="admin-nav-list">
-        <a class="admin-nav-link" href="#recent-registrations">
+        <a class="admin-nav-link ${activeNav === 'businesses' ? 'active' : ''}" href="/admin/businesses">
           <span class="admin-nav-link-icon">🏢</span>
           <span>All Businesses</span>
         </a>
-        <a class="admin-nav-link" href="#pending-approvals">
+        <a class="admin-nav-link ${activeNav === 'pending' ? 'active' : ''}" href="/admin/businesses?status=PENDING">
           <span class="admin-nav-link-icon">📄</span>
           <span>Pending Approvals</span>
-          <span class="admin-nav-link-badge">12</span>
+          <span class="admin-nav-link-badge" id="sidebarPendingCount">…</span>
         </a>
-        <a class="admin-nav-link" href="#users">
+        <a class="admin-nav-link ${activeNav === 'users' ? 'active' : ''}" href="/admin/users">
           <span class="admin-nav-link-icon">👤</span>
           <span>User Management</span>
-        </a>
-        <a class="admin-nav-link" href="#roles">
-          <span class="admin-nav-link-icon">🛡️</span>
-          <span>Roles & Permissions</span>
         </a>
       </div>
     </div>
@@ -737,17 +753,9 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
         <span style="font-size:10px;">⌄</span>
       </div>
       <div class="admin-nav-list">
-        <a class="admin-nav-link" href="#monthly-reports">
-          <span class="admin-nav-link-icon">📅</span>
-          <span>Monthly Reports</span>
-        </a>
-        <a class="admin-nav-link" href="#yearly-reports">
-          <span class="admin-nav-link-icon">📈</span>
-          <span>Yearly Reports</span>
-        </a>
-        <a class="admin-nav-link" href="#analytics">
+        <a class="admin-nav-link ${activeNav === 'reports' ? 'active' : ''}" href="/admin/reports">
           <span class="admin-nav-link-icon">📊</span>
-          <span>Platform Analytics</span>
+          <span>Platform Reports</span>
         </a>
       </div>
     </div>
@@ -759,17 +767,13 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
         <span style="font-size:10px;">⌄</span>
       </div>
       <div class="admin-nav-list">
-        <a class="admin-nav-link" href="#system-health">
-          <span class="admin-nav-link-icon">⚙️</span>
-          <span>System Health</span>
-        </a>
-        <a class="admin-nav-link" href="#background-jobs">
-          <span class="admin-nav-link-icon">⚡</span>
-          <span>Background Jobs</span>
-        </a>
-        <a class="admin-nav-link" href="#audit-logs">
+        <a class="admin-nav-link ${activeNav === 'audit' ? 'active' : ''}" href="/admin/audit-logs">
           <span class="admin-nav-link-icon">🛡️</span>
           <span>Audit Logs</span>
+        </a>
+        <a class="admin-nav-link" href="/api/admin/backup-download">
+          <span class="admin-nav-link-icon">💾</span>
+          <span>DB Backup</span>
         </a>
       </div>
     </div>
@@ -781,15 +785,9 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
         <span style="font-size:10px;">⌄</span>
       </div>
       <div class="admin-nav-list">
-        <a class="admin-nav-link" href="#support-requests">
-          <span class="admin-nav-link-icon">💬</span>
-          <span>Support Requests</span>
-          <span class="admin-nav-badge" style="margin-left:auto;">5</span>
-        </a>
-        <a class="admin-nav-link" href="#security-alerts">
-          <span class="admin-nav-link-icon">🚨</span>
-          <span>Security Alerts</span>
-          <span class="admin-nav-badge red" style="margin-left:auto;">2</span>
+        <a class="admin-nav-link" href="/dashboard" style="color:#94a3b8;">
+          <span class="admin-nav-link-icon">🔀</span>
+          <span>Switch to Business</span>
         </a>
       </div>
     </div>
@@ -822,11 +820,27 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
           <span class="admin-bell-badge">3</span>
         </div>
 
-        <div class="admin-profile-pill" onclick="if(confirm('Logout from Admin Console?')) window.location.href='/admin/logout';">
-          <div class="admin-avatar-circle">A</div>
-          <div class="admin-profile-text">
-            <strong>Admin</strong>
-            <small>Super Admin</small>
+        <!-- Admin Profile Dropdown -->
+        <div class="profile-dropdown-wrap" id="adminProfileWrap">
+          <button class="admin-profile-pill" id="adminProfileBtn" aria-haspopup="true" aria-expanded="false">
+            <div class="admin-avatar-circle">${(user.full_name || 'A').charAt(0).toUpperCase()}</div>
+            <div class="admin-profile-text">
+              <strong>${escapeHtml(user.full_name || 'Admin')}</strong>
+              <small>${user.platform_role === 'SUPER_ADMIN' ? 'Super Admin' : 'Platform Admin'}</small>
+            </div>
+            <span style="font-size:10px;color:#94a3b8;margin-left:4px;">▾</span>
+          </button>
+          <div class="profile-dropdown-menu" id="adminProfileMenu" role="menu" style="right:0;top:52px;">
+            <div class="profile-dropdown-header">
+              <div class="profile-dropdown-biz">Platform Control</div>
+              <div class="profile-dropdown-email" style="font-size:10px;color:#94a3b8;">${escapeHtml(user.email || '')}</div>
+            </div>
+            <div class="profile-dropdown-divider"></div>
+            <a href="/admin" class="profile-dropdown-item" role="menuitem">🏠 Dashboard</a>
+            <a href="/admin/businesses" class="profile-dropdown-item" role="menuitem">🏢 Manage Businesses</a>
+            <a href="/admin/users" class="profile-dropdown-item" role="menuitem">👥 Manage Users</a>
+            <div class="profile-dropdown-divider"></div>
+            <button class="profile-dropdown-item profile-dropdown-logout" onclick="if(confirm('Logout?')) window.location.href='/admin/logout';" role="menuitem">⏻ Sign Out</button>
           </div>
         </div>
       </div>
@@ -834,6 +848,27 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
 
     <!-- CONTENT BODY (MATCHING IMAGE 1) -->
     <main class="admin-content">
+      ${bodyContent ? bodyContent : renderAdminOverviewDashboard()}
+    </main>
+
+    <!-- FOOTER (MATCHING IMAGE 1) -->
+    <footer class="admin-footer">
+      <span>© 2025 RMSTORVIX IGNITE. All rights reserved.</span>
+      <div>
+        <a href="#privacy">Privacy Policy</a>
+        <a href="#terms">Terms & Conditions</a>
+        <a href="#help">Help</a>
+      </div>
+    </footer>
+  </div>
+</div>
+<script src="/assets/js/admin.js"></script>
+</body>
+</html>`;
+}
+
+function renderAdminOverviewDashboard() {
+  return `
       <div class="admin-dash-header">
         <div>
           <h1>Admin Dashboard</h1>
@@ -1163,21 +1198,7 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
           </div>
         </div>
       </div>
-    </main>
-
-    <!-- FOOTER (MATCHING IMAGE 1) -->
-    <footer class="admin-footer">
-      <span>© 2025 RMSTORVIX IGNITE. All rights reserved.</span>
-      <div>
-        <a href="#privacy">Privacy Policy</a>
-        <a href="#terms">Terms & Conditions</a>
-        <a href="#help">Help</a>
-      </div>
-    </footer>
-  </div>
-</div>
-<script src="/assets/js/admin.js"></script>
-</html>`;
+  `;
 }
 
 // Request Handler (Shared between Node HTTP daemon & Vercel Serverless Function)
@@ -1399,6 +1420,20 @@ async function handleRequest(req, res) {
             <label class="col-span-2">Account Password (10+ characters) *
               <input type="password" name="password" required placeholder="••••••••••••" minlength="10">
             </label>
+            <div class="col-span-2" style="margin-top:4px;">
+              <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12.5px;">Company / Business Logo (Optional)</label>
+              <div style="display:flex;align-items:center;gap:14px;background:#f8fafc;padding:12px 14px;border:1px dashed #cbd5e1;border-radius:8px;">
+                <div id="signupLogoPreviewWrap" style="width:52px;height:52px;border-radius:8px;background:#e2e8f0;display:grid;place-items:center;font-size:22px;overflow:hidden;flex-shrink:0;">
+                  <span id="signupLogoPlaceholder">🏢</span>
+                  <img id="signupLogoPreviewImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;" alt="Preview">
+                </div>
+                <div style="flex:1;">
+                  <input type="file" id="signupLogoFileInput" accept="image/png,image/jpeg,image/webp" style="font-size:12px;color:#475569;">
+                  <input type="hidden" name="logo_url" id="signupLogoHidden">
+                  <div style="font-size:11px;color:#64748b;margin-top:4px;">PNG, JPG, or WEBP up to 2MB. Displayed on invoices & topbar.</div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="consent-box">
             <label>
@@ -1409,6 +1444,30 @@ async function handleRequest(req, res) {
           <button type="submit" class="button button-primary w-100">Submit Business for Verification</button>
         </form>
         <p class="muted-note">Already registered? <a href="/login" class="text-link">Sign in here →</a></p>
+        <script>
+          const logoInput = document.getElementById('signupLogoFileInput');
+          if (logoInput) {
+            logoInput.addEventListener('change', function(e) {
+              const file = e.target.files && e.target.files[0];
+              if (!file) return;
+              if (file.size > 2 * 1024 * 1024) {
+                alert('Logo image must be smaller than 2MB.');
+                logoInput.value = '';
+                return;
+              }
+              const reader = new FileReader();
+              reader.onload = function(evt) {
+                const base64 = evt.target.result;
+                document.getElementById('signupLogoHidden').value = base64;
+                const img = document.getElementById('signupLogoPreviewImg');
+                img.src = base64;
+                img.style.display = 'block';
+                document.getElementById('signupLogoPlaceholder').style.display = 'none';
+              };
+              reader.readAsDataURL(file);
+            });
+          }
+        </script>
       `
     });
     return sendHtml(res, 200, html);
@@ -1420,7 +1479,7 @@ async function handleRequest(req, res) {
     const {
       business_name, owner_name, business_type, gstin,
       email, mobile, address_line, city, state, pin_code,
-      password, consent
+      password, consent, logo_url
     } = body;
 
     if (!business_name || !owner_name || !email || !mobile || !password) {
@@ -1452,9 +1511,9 @@ async function handleRequest(req, res) {
       const result = transaction((db) => {
         // Create business in PENDING status
         const bizRes = db.prepare(`
-          INSERT INTO businesses (public_id, business_name, owner_name, business_type, gstin, email, mobile, address_line, city, state, state_code, pin_code, approval_status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')
-        `).run(uuid(), business_name.trim(), owner_name.trim(), business_type || 'Private Limited', validGstin, cleanEmail, mobile.trim(), address_line || '', city || '', state || '', stateCode || '', pin_code || '');
+          INSERT INTO businesses (public_id, business_name, owner_name, business_type, gstin, email, mobile, address_line, city, state, state_code, pin_code, logo_url, approval_status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')
+        `).run(uuid(), business_name.trim(), owner_name.trim(), business_type || 'Private Limited', validGstin, cleanEmail, mobile.trim(), address_line || '', city || '', state || '', stateCode || '', pin_code || '', logo_url || null);
 
         const bizId = bizRes.lastInsertRowid;
 
@@ -1753,112 +1812,7 @@ async function handleRequest(req, res) {
       const html = renderAdminShell({
         title: 'Platform Command Center',
         activeNav: 'overview',
-        user: sessionUser,
-        bodyContent: `
-          <div class="admin-kpi-grid">
-            <article class="admin-kpi-card">
-              <div class="admin-kpi-top"><span>Total Tenants</span><span class="admin-kpi-icon" style="background:rgba(59,130,246,0.15);color:#60a5fa;">🏢</span></div>
-              <div class="admin-kpi-value" id="kpiTotalBiz">-</div>
-              <div class="admin-kpi-foot">Registered SaaS businesses</div>
-            </article>
-            <article class="admin-kpi-card">
-              <div class="admin-kpi-top"><span>Pending Approvals</span><span class="admin-kpi-icon" style="background:rgba(245,158,11,0.15);color:#fbbf24;">⏳</span></div>
-              <div class="admin-kpi-value" id="kpiPendingBiz" style="color:#fbbf24;">-</div>
-              <div class="admin-kpi-foot">Awaiting verification</div>
-            </article>
-            <article class="admin-kpi-card">
-              <div class="admin-kpi-top"><span>Active Workspaces</span><span class="admin-kpi-icon" style="background:rgba(16,185,129,0.15);color:#34d399;">✓</span></div>
-              <div class="admin-kpi-value" id="kpiActiveBiz" style="color:#34d399;">-</div>
-              <div class="admin-kpi-foot">Fully operational</div>
-            </article>
-            <article class="admin-kpi-card">
-              <div class="admin-kpi-top"><span>Suspended / Rejected</span><span class="admin-kpi-icon" style="background:rgba(239,68,68,0.15);color:#f87171;">⚠</span></div>
-              <div class="admin-kpi-value" id="kpiSuspendedBiz" style="color:#f87171;">-</div>
-              <div class="admin-kpi-foot">Access revoked</div>
-            </article>
-            <article class="admin-kpi-card">
-              <div class="admin-kpi-top"><span>Platform Users</span><span class="admin-kpi-icon" style="background:rgba(139,92,246,0.15);color:#c084fc;">👥</span></div>
-              <div class="admin-kpi-value" id="kpiTotalUsers">-</div>
-              <div class="admin-kpi-foot">Across all tenants</div>
-            </article>
-            <article class="admin-kpi-card">
-              <div class="admin-kpi-top"><span>Audit Events</span><span class="admin-kpi-icon" style="background:rgba(6,182,212,0.15);color:#22d3ee;">🛡️</span></div>
-              <div class="admin-kpi-value" id="kpiAuditLogs">-</div>
-              <div class="admin-kpi-foot">Immutable security logs</div>
-            </article>
-          </div>
-
-          <section class="admin-panel" id="businesses">
-            <div class="admin-panel-head">
-              <div>
-                <h2>Tenant Business Workspaces</h2>
-                <p>Manage multi-tenant business registrations, review compliance, and approve accounts.</p>
-              </div>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <input type="text" id="adminBizSearch" class="admin-search-input" placeholder="Search business, GSTIN, owner...">
-                <select id="adminBizFilter" class="admin-search-input" style="min-width:140px;" aria-label="Filter status">
-                  <option value="ALL">All Statuses</option>
-                  <option value="PENDING">Pending Review</option>
-                  <option value="APPROVED">Approved</option>
-                  <option value="SUSPENDED">Suspended</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="admin-table-wrap">
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>BUSINESS NAME</th>
-                    <th>OWNER & CONTACT</th>
-                    <th>GSTIN</th>
-                    <th>STATUS</th>
-                    <th>SUBSCRIPTION</th>
-                    <th>CREATED</th>
-                    <th>ADMIN ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody id="adminBizTableBody">
-                  <tr><td colspan="8" style="text-align:center;color:#8b9bb4;">Loading tenant businesses...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="admin-panel" id="audit">
-            <div class="admin-panel-head">
-              <div>
-                <h2>Platform Security & Audit Trail</h2>
-                <p>Real-time audit log of system events, security state changes, and multi-tenant actions.</p>
-              </div>
-              <div>
-                <button onclick="loadAuditLogs()" class="btn-action-sm btn-action-blue">Refresh Logs</button>
-              </div>
-            </div>
-            <div class="audit-terminal" id="adminAuditLogs">
-              <div style="color:#64748b;padding:8px;">Streaming audit log records...</div>
-            </div>
-          </section>
-
-          <section class="admin-panel" id="system">
-            <div class="admin-panel-head">
-              <div>
-                <h2>System Health & Database Maintenance</h2>
-                <p>Database mode: SQLite 3 WAL Mode (Production Engine) & MySQL 8 Parity.</p>
-              </div>
-            </div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-              <a href="/api/admin/backup-download" class="btn-action-sm btn-action-blue" style="padding:10px 18px;font-size:12px;text-decoration:none;">
-                💾 Download Live Database Backup (.sqlite)
-              </a>
-              <a href="/build-control" class="btn-action-sm btn-action-green" style="padding:10px 18px;font-size:12px;text-decoration:none;">
-                🚀 Open 6-Phase Build Control Center
-              </a>
-            </div>
-          </section>
-        `
+        user: sessionUser
       });
       return sendHtml(res, 200, html);
     }
@@ -1971,9 +1925,320 @@ async function handleRequest(req, res) {
       });
       return res.end(data);
     }
+
+    // GET /admin/businesses — All Businesses management page
+    if (pathname === '/admin/businesses' && method === 'GET') {
+      const filterStatus = parsedUrl.query.status || 'ALL';
+      const html = renderAdminShell({
+        title: 'Manage Businesses',
+        activeNav: filterStatus === 'PENDING' ? 'pending' : 'businesses',
+        user: sessionUser,
+        bodyContent: `
+          <div class="admin-dash-header">
+            <div>
+              <h1>${filterStatus === 'PENDING' ? 'Pending Approvals' : 'All Businesses'}</h1>
+              <p>Manage, approve and monitor all registered business tenants on the platform.</p>
+            </div>
+            <div class="admin-date-filters">
+              <a href="/admin/businesses" class="btn-date-picker ${filterStatus === 'ALL' ? 'active' : ''}" style="text-decoration:none;">All</a>
+              <a href="/admin/businesses?status=PENDING" class="btn-date-picker ${filterStatus === 'PENDING' ? 'active' : ''}" style="text-decoration:none;">Pending</a>
+              <a href="/admin/businesses?status=APPROVED" class="btn-date-picker ${filterStatus === 'APPROVED' ? 'active' : ''}" style="text-decoration:none;">Approved</a>
+              <a href="/admin/businesses?status=SUSPENDED" class="btn-date-picker ${filterStatus === 'SUSPENDED' ? 'active' : ''}" style="text-decoration:none;">Suspended</a>
+            </div>
+          </div>
+          <div class="dash-panel" style="margin-top:20px;">
+            <div class="table-panel-header">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <h3>Business Registrations</h3>
+                <input type="text" id="bizSearchBox" class="admin-search-input" placeholder="Search name, owner, GSTIN..." style="min-width:220px;">
+              </div>
+              <span id="bizCountLabel" style="font-size:12px;color:#64748b;"></span>
+            </div>
+            <div class="table-responsive">
+              <table class="admin-data-table" id="bizMgmtTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Logo</th>
+                    <th>Business Name</th>
+                    <th>Owner / Email</th>
+                    <th>GSTIN</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Registered</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="bizMgmtBody">
+                  <tr><td colspan="9" class="text-center" style="color:#8b9bb4;">Loading businesses…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <script>
+            (async function() {
+              const status = '${filterStatus}';
+              const url = status === 'ALL' ? '/api/admin/businesses' : '/api/admin/businesses?status=' + status;
+              const res = await fetch(url);
+              const data = await res.json();
+              const list = data.businesses || [];
+              const label = document.getElementById('bizCountLabel');
+              if(label) label.textContent = list.length + ' record(s)';
+              const tbody = document.getElementById('bizMgmtBody');
+              if(!tbody) return;
+              if(list.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="text-center">No businesses found.</td></tr>'; return; }
+              function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+              const statusColors = { APPROVED:'#16a34a', PENDING:'#d97706', REJECTED:'#dc2626', SUSPENDED:'#7c3aed' };
+              tbody.innerHTML = list.map((b,i) => \`
+                <tr id="bizRow\${b.id}">
+                  <td><strong>\${i+1}</strong></td>
+                  <td>\${b.logo_url ? \`<img src="\${esc(b.logo_url)}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;" alt="Logo">\` : \`<span style="display:grid;place-items:center;width:32px;height:32px;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:13px;font-weight:700;">\${esc(b.business_name||'?').charAt(0)}</span>\`}</td>
+                  <td><strong>\${esc(b.business_name)}</strong><br><small style="color:#64748b;">\${esc(b.city||'')} \${esc(b.state||'')}</small></td>
+                  <td>\${esc(b.owner_name)}<br><small style="color:#64748b;">\${esc(b.email)}</small></td>
+                  <td>\${b.gstin ? \`<code style="font-size:11px;">\${esc(b.gstin)}</code>\` : '<span style="color:#94a3b8;">—</span>'}</td>
+                  <td>\${esc(b.business_type||'')}</td>
+                  <td><span style="color:\${statusColors[b.approval_status]||'#64748b'};font-weight:700;font-size:12px;">\${esc(b.approval_status)}</span></td>
+                  <td>\${b.created_at ? b.created_at.slice(0,10) : '—'}</td>
+                  <td style="white-space:nowrap;">
+                    \${b.approval_status === 'PENDING' ? \`<button onclick="approveBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-tbl-action approve">Approve</button> <button onclick="rejectBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-tbl-action reject">Reject</button>\` : ''}
+                    \${b.approval_status === 'APPROVED' ? \`<button onclick="suspendBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-tbl-action reject">Suspend</button>\` : ''}
+                    \${b.approval_status === 'SUSPENDED' ? \`<button onclick="unsuspendBiz(\${b.id},'\${esc(b.business_name)}')" class="btn-tbl-action approve">Unsuspend</button>\` : ''}
+                  </td>
+                </tr>
+              \`).join('');
+              // Search filter
+              document.getElementById('bizSearchBox').addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+                  tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+              });
+            })();
+            async function approveBiz(id, name) {
+              if(!confirm('Approve "' + name + '"?')) return;
+              const r = await fetch('/api/admin/businesses/' + id + '/approve', {method:'POST'});
+              const d = await r.json(); if(!r.ok) { alert(d.error); return; }
+              alert('"' + name + '" approved!'); location.reload();
+            }
+            async function rejectBiz(id, name) {
+              const reason = prompt('Rejection reason for "' + name + '":'); if(!reason) return;
+              const r = await fetch('/api/admin/businesses/' + id + '/reject', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({reason})});
+              const d = await r.json(); if(!r.ok) { alert(d.error); return; }
+              alert('"' + name + '" rejected.'); location.reload();
+            }
+            async function suspendBiz(id, name) {
+              if(!confirm('Suspend "' + name + '"?')) return;
+              const r = await fetch('/api/admin/businesses/' + id + '/status', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({status:'SUSPENDED', reason:'Suspended by admin'})});
+              location.reload();
+            }
+            async function unsuspendBiz(id, name) {
+              if(!confirm('Restore "' + name + '" to Active?')) return;
+              const r = await fetch('/api/admin/businesses/' + id + '/status', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({status:'APPROVED'})});
+              location.reload();
+            }
+          </script>
+        `
+      });
+      return sendHtml(res, 200, html);
+    }
+
+    // GET /admin/users — User Management page
+    if (pathname === '/admin/users' && method === 'GET') {
+      const users = db.prepare(`
+        SELECT u.*, b.business_name FROM users u
+        LEFT JOIN businesses b ON b.id = u.business_id
+        ORDER BY u.id DESC LIMIT 100
+      `).all();
+      const html = renderAdminShell({
+        title: 'User Management',
+        activeNav: 'users',
+        user: sessionUser,
+        bodyContent: `
+          <div class="admin-dash-header">
+            <div>
+              <h1>User Management</h1>
+              <p>View and manage all registered users across all business tenants.</p>
+            </div>
+          </div>
+          <div class="dash-panel" style="margin-top:20px;">
+            <div class="table-panel-header">
+              <h3>Platform Users (${users.length})</h3>
+              <input type="text" id="usrSearch" class="admin-search-input" placeholder="Search by name, email or business...">
+            </div>
+            <div class="table-responsive">
+              <table class="admin-data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Business</th>
+                    <th>Platform Role</th>
+                    <th>Business Role</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                  </tr>
+                </thead>
+                <tbody id="usrTableBody">
+                  ${users.map((u, i) => `
+                    <tr>
+                      <td>${i + 1}</td>
+                      <td><strong>${escapeHtml(u.full_name)}</strong></td>
+                      <td>${escapeHtml(u.email)}</td>
+                      <td>${escapeHtml(u.business_name || '— Platform —')}</td>
+                      <td><span style="font-size:11px;font-weight:700;color:${u.platform_role === 'SUPER_ADMIN' ? '#c084fc' : '#60a5fa'};">${escapeHtml(u.platform_role)}</span></td>
+                      <td>${escapeHtml(u.business_role)}</td>
+                      <td><span style="font-weight:700;font-size:11px;color:${u.account_status === 'ACTIVE' ? '#34d399' : '#f87171'};">${escapeHtml(u.account_status)}</span></td>
+                      <td>${u.last_login_at ? u.last_login_at.slice(0, 16).replace('T', ' ') : '—'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <script>
+            document.getElementById('usrSearch').addEventListener('input', function() {
+              const q = this.value.toLowerCase();
+              Array.from(document.getElementById('usrTableBody').querySelectorAll('tr')).forEach(tr => {
+                tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+              });
+            });
+          </script>
+        `
+      });
+      return sendHtml(res, 200, html);
+    }
+
+    // GET /admin/reports — Platform Reports
+    if (pathname === '/admin/reports' && method === 'GET') {
+      const totalBiz = db.prepare("SELECT COUNT(*) AS c FROM businesses").get().c;
+      const activeBiz = db.prepare("SELECT COUNT(*) AS c FROM businesses WHERE approval_status='APPROVED'").get().c;
+      const pendingBiz = db.prepare("SELECT COUNT(*) AS c FROM businesses WHERE approval_status='PENDING'").get().c;
+      const totalUsers = db.prepare("SELECT COUNT(*) AS c FROM users").get().c;
+      const totalInvoices = db.prepare("SELECT COUNT(*) AS c FROM invoices").get().c;
+      const totalRevenue = db.prepare("SELECT COALESCE(SUM(grand_total),0) AS r FROM invoices WHERE status != 'CANCELLED'").get().r;
+      const html = renderAdminShell({
+        title: 'Platform Reports',
+        activeNav: 'reports',
+        user: sessionUser,
+        bodyContent: `
+          <div class="admin-dash-header">
+            <div>
+              <h1>Platform Reports & Analytics</h1>
+              <p>Real-time aggregated platform metrics, business and financial summaries.</p>
+            </div>
+          </div>
+          <div class="kpi-row-5" style="margin-top:20px;">
+            <div class="kpi-card">
+              <div class="kpi-top"><span class="kpi-icon-circle blue">🏢</span><span class="kpi-title">Total Businesses</span></div>
+              <div class="kpi-number">${totalBiz}</div>
+              <div class="kpi-trend up"><span>Live count</span></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-top"><span class="kpi-icon-circle green">✓</span><span class="kpi-title">Active Businesses</span></div>
+              <div class="kpi-number">${activeBiz}</div>
+              <div class="kpi-trend up"><span>↑ Operational</span></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-top"><span class="kpi-icon-circle orange">⏳</span><span class="kpi-title">Pending Approvals</span></div>
+              <div class="kpi-number">${pendingBiz}</div>
+              <div class="kpi-trend down"><span>Awaiting review</span></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-top"><span class="kpi-icon-circle purple">👤</span><span class="kpi-title">Total Users</span></div>
+              <div class="kpi-number">${totalUsers}</div>
+              <div class="kpi-trend up"><span>All tenants</span></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-top"><span class="kpi-icon-circle blue">📄</span><span class="kpi-title">Total Invoices</span></div>
+              <div class="kpi-number">${totalInvoices}</div>
+              <div class="kpi-trend up"><span>Platform-wide</span></div>
+            </div>
+          </div>
+          <div class="dash-panel" style="margin-top:20px;">
+            <div class="dash-panel-header">
+              <h3>Platform Revenue Summary</h3>
+            </div>
+            <div style="padding:20px;">
+              <div style="font-size:36px;font-weight:800;color:#34d399;">₹${Number(totalRevenue).toLocaleString('en-IN', {maximumFractionDigits:2})}</div>
+              <div style="font-size:13px;color:#64748b;margin-top:4px;">Total gross revenue across all tenants (all time)</div>
+            </div>
+          </div>
+        `
+      });
+      return sendHtml(res, 200, html);
+    }
+
+    // GET /admin/audit-logs — Audit Logs page
+    if (pathname === '/admin/audit-logs' && method === 'GET') {
+      const logs = db.prepare(`
+        SELECT a.*, u.full_name AS user_name, u.email AS user_email, b.business_name
+        FROM audit_logs a
+        LEFT JOIN users u ON u.id = a.actor_user_id
+        LEFT JOIN businesses b ON b.id = a.business_id
+        ORDER BY a.id DESC LIMIT 200
+      `).all();
+      const html = renderAdminShell({
+        title: 'Audit Logs',
+        activeNav: 'audit',
+        user: sessionUser,
+        bodyContent: `
+          <div class="admin-dash-header">
+            <div>
+              <h1>Platform Security & Audit Trail</h1>
+              <p>Immutable log of all critical system events, user actions and security changes.</p>
+            </div>
+          </div>
+          <div class="dash-panel" style="margin-top:20px;">
+            <div class="table-panel-header">
+              <h3>Audit Events (last 200)</h3>
+              <input type="text" id="auditSearch" class="admin-search-input" placeholder="Filter events...">
+            </div>
+            <div class="table-responsive">
+              <table class="admin-data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Time</th>
+                    <th>Event</th>
+                    <th>Entity</th>
+                    <th>User</th>
+                    <th>Business</th>
+                    <th>IP Address</th>
+                  </tr>
+                </thead>
+                <tbody id="auditTableBody">
+                  ${logs.length === 0 ? '<tr><td colspan="7" class="text-center">No audit events recorded yet.</td></tr>' : logs.map((l, i) => `
+                    <tr>
+                      <td>${i + 1}</td>
+                      <td style="font-size:11px;">${(l.created_at || '').slice(0, 16).replace('T', ' ')}</td>
+                      <td><span style="font-weight:700;color:#60a5fa;font-size:11px;">${escapeHtml(l.action_key || '')}</span></td>
+                      <td style="font-size:11px;">${escapeHtml(l.entity_type || '')} ${l.entity_id ? '#' + l.entity_id : ''}</td>
+                      <td>${escapeHtml(l.user_name || l.user_email || '—')}</td>
+                      <td>${escapeHtml(l.business_name || '— Platform —')}</td>
+                      <td style="font-size:11px;">${escapeHtml(l.ip_address || '—')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <script>
+            document.getElementById('auditSearch').addEventListener('input', function() {
+              const q = this.value.toLowerCase();
+              Array.from(document.getElementById('auditTableBody').querySelectorAll('tr')).forEach(tr => {
+                tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+              });
+            });
+          </script>
+        `
+      });
+      return sendHtml(res, 200, html);
+    }
   }
 
   // 4. BUSINESS USER ACCESS GATE
+
   // If not logged in, redirect to login
   if (!sessionUser) {
     if (pathname.startsWith('/api/')) return sendJson(res, 401, { error: 'Authentication required' });
@@ -3608,8 +3873,207 @@ async function handleRequest(req, res) {
 
   // 13. SETTINGS MODULE (`/settings` and `/api/settings`)
 
+  // GET /profile — User & Business Profile Page
+  if (pathname === '/profile' && method === 'GET') {
+    const html = renderShell({
+      title: 'My Profile',
+      activeNav: 'settings',
+      user: sessionUser,
+      business: currentBusiness,
+      bodyContent: `
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow">ACCOUNT</p>
+            <h1>My Profile <span>👤</span></h1>
+            <p class="subheading">Manage your personal account details, business identity and company logo.</p>
+          </div>
+        </section>
+
+        <!-- PROFILE CARD -->
+        <section class="panel">
+          <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;">
+            <!-- Avatar / Logo Display -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;min-width:140px;">
+              <div id="profileAvatarWrap" style="width:100px;height:100px;border-radius:50%;overflow:hidden;border:3px solid #2563eb;display:grid;place-items:center;background:#1e3a5f;position:relative;">
+                ${currentBusiness && currentBusiness.logo_url
+                  ? `<img src="${escapeHtml(currentBusiness.logo_url)}" id="profileLogoPreview" style="width:100%;height:100%;object-fit:cover;" alt="Company Logo">`
+                  : `<span id="profileInitials" style="font-size:36px;font-weight:800;color:#60a5fa;">${escapeHtml((sessionUser.full_name || 'U').charAt(0).toUpperCase())}</span>`
+                }
+              </div>
+              <label class="button button-secondary" style="padding:6px 12px;font-size:11px;cursor:pointer;margin:0;" title="Upload Company Logo">
+                📷 Change Logo
+                <input type="file" id="profileLogoInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none;">
+              </label>
+              <small style="color:#64748b;font-size:10px;text-align:center;">PNG, JPG, SVG · Max 2MB</small>
+            </div>
+            <!-- Info Panel -->
+            <div style="flex:1;min-width:200px;">
+              <div style="font-size:22px;font-weight:800;margin-bottom:2px;">${escapeHtml(sessionUser.full_name)}</div>
+              <div style="color:#94a3b8;font-size:13px;margin-bottom:8px;">${escapeHtml(sessionUser.email)}</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                <span class="pill paid">${escapeHtml(sessionUser.platform_role.replace('_', ' '))}</span>
+                <span class="pill pending">${escapeHtml(sessionUser.business_role)}</span>
+              </div>
+              <div style="font-size:13px;color:#64748b;">
+                <strong>${escapeHtml(currentBusiness ? currentBusiness.business_name : 'Platform')}</strong>
+                ${currentBusiness && currentBusiness.gstin ? `<br>GSTIN: <code>${escapeHtml(currentBusiness.gstin)}</code>` : ''}
+                ${currentBusiness && currentBusiness.city ? `<br>${escapeHtml(currentBusiness.city)}, ${escapeHtml(currentBusiness.state || '')}` : ''}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- EDIT PROFILE FORM -->
+        <section class="panel mt-4">
+          <div class="panel-heading"><div><h2>Edit Account Details</h2><p>Update your personal information and change your password.</p></div></div>
+          <form id="profileEditForm">
+            <input type="hidden" id="profileLogoDataInput" name="logo_url" value="${escapeHtml(currentBusiness?.logo_url || '')}">
+            <div class="form-grid">
+              <label>Full Name *
+                <input type="text" name="full_name" value="${escapeHtml(sessionUser.full_name)}" required>
+              </label>
+              <label>Mobile Number
+                <input type="tel" name="mobile" value="${escapeHtml(sessionUser.mobile || '')}">
+              </label>
+              <label>Email Address
+                <input type="email" name="email" value="${escapeHtml(sessionUser.email)}" readonly style="opacity:0.6;" title="Contact support to change email">
+              </label>
+              <label>New Password (leave blank to keep current)
+                <input type="password" name="new_password" placeholder="10+ characters" minlength="10">
+              </label>
+            </div>
+            <br>
+            <button type="submit" class="button button-primary">Save Profile Changes</button>
+          </form>
+        </section>
+
+        <!-- COMPANY LOGO & IDENTITY -->
+        <section class="panel mt-4">
+          <div class="panel-heading"><div><h2>Company Logo & Identity</h2><p>Your company logo appears in invoices, the sidebar, and the topbar profile button.</p></div></div>
+          <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+            <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;border:2px solid #334155;display:grid;place-items:center;background:#0f172a;">
+              ${currentBusiness && currentBusiness.logo_url
+                ? `<img src="${escapeHtml(currentBusiness.logo_url)}" id="settingsLogoThumb" style="width:100%;height:100%;object-fit:contain;" alt="Logo">`
+                : `<span id="settingsLogoThumbPlaceholder" style="color:#64748b;font-size:24px;">🏢</span><img id="settingsLogoThumb" style="width:100%;height:100%;object-fit:contain;display:none;" alt="Logo">`
+              }
+            </div>
+            <div>
+              <label class="button button-secondary" style="cursor:pointer;">
+                📁 Upload New Logo
+                <input type="file" id="companyLogoFileInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none;">
+              </label>
+              <div style="margin-top:8px;font-size:12px;color:#64748b;">Recommended: Square PNG, transparent background</div>
+              <div id="logoUploadStatus" style="font-size:12px;margin-top:4px;"></div>
+            </div>
+          </div>
+        </section>
+
+        <script>
+          async function handleLogoUpload(file) {
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+              alert('Image must be smaller than 2MB');
+              return;
+            }
+            const status = document.getElementById('logoUploadStatus');
+            if (status) status.innerHTML = '<span style="color:#38bdf8;">Uploading logo...</span>';
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+              const base64 = e.target.result;
+              try {
+                const res = await fetch('/api/profile', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ logo_url: base64 })
+                });
+                const d = await res.json();
+                if (!res.ok) throw new Error(d.error || 'Failed to update logo');
+                // Update UI previews
+                const thumb = document.getElementById('settingsLogoThumb');
+                if (thumb) { thumb.src = base64; thumb.style.display = 'block'; }
+                const thumbPlaceholder = document.getElementById('settingsLogoThumbPlaceholder');
+                if (thumbPlaceholder) thumbPlaceholder.style.display = 'none';
+                const avatar = document.getElementById('profileLogoPreview');
+                if (avatar) avatar.src = base64;
+                const initials = document.getElementById('profileInitials');
+                if (initials) initials.style.display = 'none';
+                if (status) status.innerHTML = '<span style="color:#10b981;">✓ Company logo updated successfully!</span>';
+                // Reload in 800ms to reflect in topbar
+                setTimeout(() => location.reload(), 800);
+              } catch (err) {
+                if (status) status.innerHTML = '<span style="color:#ef4444;">Error: ' + err.message + '</span>';
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+
+          document.getElementById('companyLogoFileInput')?.addEventListener('change', function(e) {
+            handleLogoUpload(e.target.files && e.target.files[0]);
+          });
+          document.getElementById('profileLogoInput')?.addEventListener('change', function(e) {
+            handleLogoUpload(e.target.files && e.target.files[0]);
+          });
+
+          document.getElementById('profileEditForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            try {
+              const payload = {
+                full_name: form.elements['full_name'].value,
+                mobile: form.elements['mobile'].value,
+                new_password: form.elements['new_password'] ? form.elements['new_password'].value : undefined
+              };
+              const res = await fetch('/api/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error || 'Update failed');
+              alert('✓ Profile updated successfully!');
+              location.reload();
+            } catch (err) {
+              alert('Error: ' + err.message);
+              btn.disabled = false;
+              btn.textContent = 'Save Profile Changes';
+            }
+          });
+        </script>
+      `
+    });
+    return sendHtml(res, 200, html);
+  }
+
+  // POST /api/profile — Update user profile + business logo
+  if (pathname === '/api/profile' && method === 'POST') {
+    const body = await parseBody(req);
+    const { full_name, mobile, new_password, logo_url } = body;
+
+    if (full_name) {
+      db.prepare('UPDATE users SET full_name = ?, mobile = ? WHERE id = ?')
+        .run(full_name.trim(), mobile || sessionUser.mobile, sessionUser.user_id);
+    }
+
+    if (new_password && new_password.length >= 10) {
+      db.prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+        .run(hashPassword(new_password), sessionUser.user_id);
+    }
+
+    if (logo_url !== undefined && logo_url !== null && currentBusiness) {
+      db.prepare('UPDATE businesses SET logo_url = ? WHERE id = ?')
+        .run(logo_url || null, currentBusinessId);
+    }
+
+    logAudit(sessionUser.user_id, currentBusinessId, 'PROFILE_UPDATED', 'USER', sessionUser.user_id, req);
+    return sendJson(res, 200, { success: true, message: 'Profile updated successfully.' });
+  }
+
   // GET /settings
   if (pathname === '/settings' && method === 'GET') {
+
     const html = renderShell({
       title: 'Business Settings',
       activeNav: 'settings',
@@ -3654,6 +4118,22 @@ async function handleRequest(req, res) {
               <label>Currency
                 <input type="text" name="currency" value="${escapeHtml(currentBusiness.currency || 'INR')}" readonly>
               </label>
+              <div class="col-span-2" style="margin-top:6px;">
+                <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12.5px;">Company Logo</label>
+                <div style="display:flex;align-items:center;gap:16px;background:#f8fafc;padding:12px 16px;border:1px dashed #cbd5e1;border-radius:8px;">
+                  <div style="width:56px;height:56px;border-radius:8px;background:#e2e8f0;display:grid;place-items:center;overflow:hidden;flex-shrink:0;">
+                    ${currentBusiness && currentBusiness.logo_url
+                      ? `<img src="${escapeHtml(currentBusiness.logo_url)}" id="settingsFormLogoPreview" style="width:100%;height:100%;object-fit:cover;" alt="Logo">`
+                      : `<span id="settingsFormLogoPlaceholder" style="font-size:24px;">🏢</span><img id="settingsFormLogoPreview" style="width:100%;height:100%;object-fit:cover;display:none;" alt="Logo">`
+                    }
+                  </div>
+                  <div style="flex:1;">
+                    <input type="file" id="settingsLogoFileInput" accept="image/png,image/jpeg,image/webp" style="font-size:12px;">
+                    <input type="hidden" name="logo_url" id="settingsLogoHiddenInput" value="${escapeHtml(currentBusiness.logo_url || '')}">
+                    <div style="font-size:11px;color:#64748b;margin-top:4px;">Square PNG or JPG recommended. Updates invoices, sidebar, and profile pill.</div>
+                  </div>
+                </div>
+              </div>
             </div>
             <br>
             <button type="submit" class="button button-primary">Save Business Details</button>
@@ -3783,7 +4263,7 @@ async function handleRequest(req, res) {
     const {
       business_name, owner_name, gstin, invoice_prefix, address_line, city, state, pin_code,
       signatory_name, signatory_designation, enable_digital_signature, signature_date_enabled,
-      digital_signature_data, company_seal_data
+      digital_signature_data, company_seal_data, logo_url
     } = body;
 
     let validGstin = currentBusiness.gstin;
@@ -3799,7 +4279,8 @@ async function handleRequest(req, res) {
           signatory_name = ?, signatory_designation = ?,
           enable_digital_signature = ?, signature_date_enabled = ?,
           digital_signature_data = CASE WHEN ? IS NOT NULL THEN ? ELSE digital_signature_data END,
-          company_seal_data = CASE WHEN ? IS NOT NULL THEN ? ELSE company_seal_data END
+          company_seal_data = CASE WHEN ? IS NOT NULL THEN ? ELSE company_seal_data END,
+          logo_url = CASE WHEN ? IS NOT NULL THEN ? ELSE logo_url END
       WHERE id = ?
     `).run(
       business_name || currentBusiness.business_name,
@@ -3818,6 +4299,8 @@ async function handleRequest(req, res) {
       digital_signature_data !== undefined ? digital_signature_data : null,
       company_seal_data !== undefined ? company_seal_data : null,
       company_seal_data !== undefined ? company_seal_data : null,
+      logo_url !== undefined ? logo_url : null,
+      logo_url !== undefined ? logo_url : null,
       currentBusinessId
     );
 

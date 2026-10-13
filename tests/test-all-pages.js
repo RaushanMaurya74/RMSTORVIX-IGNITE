@@ -134,6 +134,42 @@ async function testAll() {
     assert.ok(Array.isArray(data.businesses));
   });
 
+  await check('Admin Page: Manage All Businesses (/admin/businesses)', async () => {
+    const res = await fetch(`${baseUrl}/admin/businesses`, { headers: { 'Cookie': adminCookie } });
+    assert.strictEqual(res.status, 200);
+    const html = await res.text();
+    assert.ok(html.includes('Manage Businesses'));
+    assert.ok(html.includes('Business Registrations'));
+  });
+
+  await check('Admin Page: Pending Approvals (/admin/businesses?status=PENDING)', async () => {
+    const res = await fetch(`${baseUrl}/admin/businesses?status=PENDING`, { headers: { 'Cookie': adminCookie } });
+    assert.strictEqual(res.status, 200);
+    const html = await res.text();
+    assert.ok(html.includes('Pending Approvals'));
+  });
+
+  await check('Admin Page: User Management (/admin/users)', async () => {
+    const res = await fetch(`${baseUrl}/admin/users`, { headers: { 'Cookie': adminCookie } });
+    assert.strictEqual(res.status, 200);
+    const html = await res.text();
+    assert.ok(html.includes('User Management'));
+  });
+
+  await check('Admin Page: Platform Reports (/admin/reports)', async () => {
+    const res = await fetch(`${baseUrl}/admin/reports`, { headers: { 'Cookie': adminCookie } });
+    assert.strictEqual(res.status, 200);
+    const html = await res.text();
+    assert.ok(html.includes('Platform Reports & Analytics'));
+  });
+
+  await check('Admin Page: Audit Logs (/admin/audit-logs)', async () => {
+    const res = await fetch(`${baseUrl}/admin/audit-logs`, { headers: { 'Cookie': adminCookie } });
+    assert.strictEqual(res.status, 200);
+    const html = await res.text();
+    assert.ok(html.includes('Platform Security & Audit Trail'));
+  });
+
   // 4. BUSINESS WORKSPACE MODULES (AUTHENTICATED)
   console.log('\n--- 4. Business Workspace Modules (Owner Session) ---');
   let ownerCookie = null;
@@ -157,6 +193,7 @@ async function testAll() {
     { path: '/payments', label: 'Payments & Collections Vouchers', checkContent: 'Payments & Vouchers' },
     { path: '/accounting', label: 'Tally Accounting & General Ledger', checkContent: 'Tally Accounting' },
     { path: '/reports', label: 'Statutory Reports & GSTR-1/3B', checkContent: 'Reports & Analytics' },
+    { path: '/profile', label: 'My Profile & Company Logo', checkContent: 'My Profile' },
     { path: '/settings', label: 'Business Settings & Digital Signature', checkContent: 'Digital Signature & Official Stamp' },
     { path: '/build-control', label: '6-Phase Build Control Center', checkContent: 'Build Control Center' }
   ];

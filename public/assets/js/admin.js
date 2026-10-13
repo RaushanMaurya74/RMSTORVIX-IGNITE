@@ -11,13 +11,42 @@ let adminData = {
 async function initAdminDashboard() {
   await fetchAdminStats();
   await fetchBusinesses();
-  renderTrendChart('monthly');
-  renderDonutChart();
-  renderAnalyticsBarChart();
+  if (document.getElementById('trendChartContainer')) {
+    renderTrendChart('monthly');
+  }
+  if (document.getElementById('donutChartContainer')) {
+    renderDonutChart();
+  }
+  if (document.getElementById('analyticsBarChartContainer')) {
+    renderAnalyticsBarChart();
+  }
   setupEventListeners();
 }
 
 function setupEventListeners() {
+  // Admin Profile dropdown toggle
+  const adminProfWrap = document.getElementById('adminProfileWrap');
+  const adminProfBtn = document.getElementById('adminProfileBtn');
+  if (adminProfWrap && adminProfBtn) {
+    adminProfBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = adminProfWrap.classList.toggle('open');
+      adminProfBtn.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', (e) => {
+      if (!adminProfWrap.contains(e.target)) {
+        adminProfWrap.classList.remove('open');
+        adminProfBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        adminProfWrap.classList.remove('open');
+        adminProfBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
   // Trend chart toggle
   const monthlyBtn = document.getElementById('btnTrendMonthly');
   const yearlyBtn = document.getElementById('btnTrendYearly');

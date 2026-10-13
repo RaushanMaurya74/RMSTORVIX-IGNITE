@@ -1648,6 +1648,30 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // 18. SETTINGS & BACKUP
+  const settingsLogoFile = document.getElementById('settingsLogoFileInput');
+  if (settingsLogoFile) {
+    settingsLogoFile.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Logo must be smaller than 2MB');
+        settingsLogoFile.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const base64 = evt.target.result;
+        const hidden = document.getElementById('settingsLogoHiddenInput');
+        if (hidden) hidden.value = base64;
+        const preview = document.getElementById('settingsFormLogoPreview');
+        if (preview) { preview.src = base64; preview.style.display = 'block'; }
+        const placeholder = document.getElementById('settingsFormLogoPlaceholder');
+        if (placeholder) placeholder.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   const settingsForm = document.getElementById('settingsForm');
   if (settingsForm) {
     settingsForm.addEventListener('submit', async (e) => {
@@ -1660,7 +1684,8 @@ document.addEventListener('DOMContentLoaded', () => {
         address_line: settingsForm.address_line.value,
         city: settingsForm.city.value,
         state: settingsForm.state.value,
-        pin_code: settingsForm.pin_code.value
+        pin_code: settingsForm.pin_code.value,
+        logo_url: settingsForm.elements['logo_url'] ? settingsForm.elements['logo_url'].value : undefined
       };
       const res = await fetch('/api/settings', {
         method: 'POST',
@@ -1668,8 +1693,12 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (res.ok) alert('Settings updated successfully!');
-      else alert(data.error || 'Update failed');
+      if (res.ok) {
+        alert('Settings updated successfully!');
+        location.reload();
+      } else {
+        alert(data.error || 'Update failed');
+      }
     });
   }
 
@@ -1920,4 +1949,42 @@ document.addEventListener('DOMContentLoaded', () => {
       window.location.href = '/api/backup/export';
     });
   }
+
+  // 17. TOPBAR PROFILE DROPDOWN
+  const profileWrap = document.getElementById('profileDropdownWrap');
+  const profileBtn = document.getElementById('profileTopbarBtn');
+  const profileLogout = document.getElementById('profileLogoutBtn');
+
+  if (profileBtn && profileWrap) {
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = profileWrap.classList.toggle('open');
+      profileBtn.setAttribute('aria-expanded', isOpen);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!profileWrap.contains(e.target)) {
+        profileWrap.classList.remove('open');
+        profileBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        profileWrap.classList.remove('open');
+        profileBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  if (profileLogout) {
+    profileLogout.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to sign out?')) return;
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (e) {}
+      window.location.href = '/login';
+    });
+  }
 });
+
