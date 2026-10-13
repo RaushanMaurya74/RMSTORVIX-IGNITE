@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "description": "RMSTORVIX IGNITE — Complete Billing, Inventory, Accounting & Business Management SaaS",
   "main": "server/server.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "start": "node --experimental-sqlite server/server.js",
     "seed": "node --experimental-sqlite server/seed.js",
     "test": "node --experimental-sqlite tests/suite.js",
+    "test:supabase": "node bin/test-supabase.js",
+    "test:all": "node --experimental-sqlite tests/suite.js && node bin/test-supabase.js",
     "backup": "node --experimental-sqlite scripts/backup.js"
   },
   "keywords": [
@@ -17,6 +22,8 @@
     "accounting",
     "tally-erp-9",
     "gst",
+    "supabase",
+    "vercel",
     "saas"
   ],
   "author": "RMSTORVIX Team",

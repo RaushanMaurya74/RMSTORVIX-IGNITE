@@ -32,6 +32,7 @@ const {
   getDayBook,
   calculateItemGST
 } = require('./accounting');
+const { testSupabaseConnection } = require('./supabase');
 
 const PORT = process.env.PORT || 8080;
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -1179,14 +1180,20 @@ function renderAdminShell({ title, activeNav = 'overview', user, bodyContent }) 
 </html>`;
 }
 
-// Create Main HTTP Server
-const server = http.createServer(async (req, res) => {
+// Request Handler (Shared between Node HTTP daemon & Vercel Serverless Function)
+async function handleRequest(req, res) {
   const parsedUrl = url.parse(req.url, true);
   let pathname = parsedUrl.pathname || '/';
   if (pathname.length > 1 && pathname.endsWith('/')) {
     pathname = pathname.replace(/\/+$/, '');
   }
   const method = req.method;
+
+  // Supabase Cloud Database Health Check API
+  if (pathname === '/api/health/supabase' && method === 'GET') {
+    const health = await testSupabaseConnection();
+    return sendJson(res, health.ok ? 200 : 503, health);
+  }
 
   // Rate Limiting on sensitive endpoints
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
@@ -3726,7 +3733,10 @@ const server = http.createServer(async (req, res) => {
   </div>
 </body>
 </html>`);
-});
+}
+
+// Create Main HTTP Server
+const server = http.createServer(handleRequest);
 
 // Start Server
 if (require.main === module) {
@@ -3740,4 +3750,5 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, PORT };
+module.exports = { server, handleRequest, PORT };
+

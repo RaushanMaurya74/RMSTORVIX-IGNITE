@@ -1,0 +1,40 @@
+name: RMSTORVIX IGNITE CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-verify:
+    name: Test & Verify Release Gates
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_OPTIONS: "--experimental-sqlite"
+      SUPABASE_URL: "https://ynacftlgrvcaiibrycbw.supabase.co"
+      SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluYWNmdGxncnZjYWlpYnJ5Y2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MTIwNTQsImV4cCI6MjEwNzQ4ODA1NH0.cM5wpNrb9YJSkrk4CcQM3aVDqXqLL9qnvGkDiTbog34"
+      SUPABASE_PROJECT_ID: "ynacftlgrvcaiibrycbw"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js v22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run 12-Workflow Automated Test Suite
+        run: node --experimental-sqlite tests/suite.js
+
+      - name: Verify Supabase Cloud Connectivity & Schemas
+        run: node bin/test-supabase.js
+
+      - name: Verify Vercel Serverless Function Handler
+        run: |
+          node -e '
+            const handler = require("./api/index.js");
+            console.log("✓ Vercel handler imported successfully");
+          '

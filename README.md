@@ -135,6 +135,28 @@ npm test
 
 ---
 
+## ✦ Cloud Integrations: GitHub, Vercel & Supabase
+
+RMSTORVIX IGNITE connects seamlessly across **GitHub**, **Vercel**, and **Supabase**:
+
+- **GitHub Repository & CI/CD**:
+  - Repo: `https://github.com/RaushanMaurya74/RMSTORVIX-IGNITE.git`
+  - Automated CI Pipeline: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) validates all 14 test workflows and verifies Supabase cloud connectivity on every commit/PR.
+- **Vercel Serverless Deployment**:
+  - Serverless Handler: [`api/index.js`](api/index.js)
+  - Deployment Config: [`vercel.json`](vercel.json) with automated routing and edge asset caching.
+  - Zero-configuration auto-deploys upon `git push origin main`.
+- **Supabase Cloud Database (PostgreSQL 17)**:
+  - Project ID: `ynacftlgrvcaiibrycbw` (Region: `ap-northeast-1`)
+  - Integration Client: [`server/supabase.js`](server/supabase.js)
+  - Diagnostic Health Checker: `npm run test:supabase`
+  - Live Health Endpoint: `GET /api/health/supabase`
+  - All 20 tables provisioned with RLS and seed data.
+
+See the complete deployment walkthrough in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+---
+
 ## ✦ License & Intellectual Property
 
 RMSTORVIX IGNITE is proprietary software developed for high-assurance business management.  

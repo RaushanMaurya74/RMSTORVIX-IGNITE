@@ -5,7 +5,23 @@ const { DatabaseSync } = require('node:sqlite');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'database', 'rmstorvix_ignite.sqlite');
+let resolvedDbPath = process.env.DB_PATH;
+if (!resolvedDbPath) {
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    resolvedDbPath = path.join('/tmp', 'rmstorvix_ignite.sqlite');
+    const sourceDb = path.join(__dirname, '..', 'database', 'rmstorvix_ignite.sqlite');
+    if (fs.existsSync(sourceDb) && !fs.existsSync(resolvedDbPath)) {
+      try {
+        fs.copyFileSync(sourceDb, resolvedDbPath);
+      } catch (e) {
+        // Fallback to fresh creation
+      }
+    }
+  } else {
+    resolvedDbPath = path.join(__dirname, '..', 'database', 'rmstorvix_ignite.sqlite');
+  }
+}
+const DB_PATH = resolvedDbPath;
 
 let dbInstance = null;
 
