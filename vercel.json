@@ -13,6 +13,12 @@
     "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluYWNmdGxncnZjYWlpYnJ5Y2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MTIwNTQsImV4cCI6MjEwNzQ4ODA1NH0.cM5wpNrb9YJSkrk4CcQM3aVDqXqLL9qnvGkDiTbog34",
     "SUPABASE_PROJECT_ID": "ynacftlgrvcaiibrycbw"
   },
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "database/**,public/**",
+      "maxDuration": 15
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -47,12 +53,8 @@
   ],
   "rewrites": [
     {
-      "source": "/assets/(.*)",
-      "destination": "/public/assets/$1"
-    },
-    {
       "source": "/(.*)",
-      "destination": "/api/index.js"
+      "destination": "/api"
     }
   ]
 }

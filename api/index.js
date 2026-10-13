@@ -5,6 +5,14 @@ const { handleRequest } = require('../server/server.js');
 
 module.exports = async (req, res) => {
   try {
+    // If Vercel rewrote the request to /api, recover the client's actual requested pathname
+    let clientUrl = req.url;
+    if (clientUrl === '/api' || clientUrl === '/api/' || clientUrl === '/api/index') {
+      const originalPath = req.headers['x-matched-path'] || req.headers['x-forwarded-uri'] || req.headers['x-invoke-path'];
+      clientUrl = originalPath || '/';
+    }
+    req.url = clientUrl;
+
     await handleRequest(req, res);
   } catch (err) {
     console.error('[RMSTORVIX IGNITE] Vercel Serverless unhandled error:', err);
