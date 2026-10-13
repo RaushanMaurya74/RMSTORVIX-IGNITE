@@ -1533,89 +1533,367 @@ async function handleRequest(req, res) {
       title: 'Register Your Business',
       isSignup: true,
       formContent: `
-        <form id="signupForm" method="POST" action="/api/auth/signup">
-          <div class="form-grid">
-            <label>Business Name *
-              <input type="text" name="business_name" required placeholder="Acme Enterprises Pvt Ltd">
-            </label>
-            <label>Owner Name *
-              <input type="text" name="owner_name" required placeholder="Raushan Maurya">
-            </label>
-            <label>Business Type *
-              <select name="business_type" required>
-                <option value="Proprietorship">Proprietorship</option>
-                <option value="Partnership">Partnership</option>
-                <option value="Private Limited" selected>Private Limited</option>
-                <option value="Public Limited">Public Limited</option>
-                <option value="LLP">LLP</option>
-              </select>
-            </label>
-            <label>GSTIN (if applicable)
-              <input type="text" name="gstin" placeholder="27AABCR1234F1Z5" maxlength="15">
-            </label>
-            <label>Work Email *
-              <input type="email" name="email" required placeholder="contact@acme.com">
-            </label>
-            <label>Mobile Number *
-              <input type="tel" name="mobile" required placeholder="9876543210">
-            </label>
-            <label class="col-span-2">Full Business Address *
-              <input type="text" name="address_line" required placeholder="Shop 4, Market Complex, MG Road">
-            </label>
-            <label>City *
-              <input type="text" name="city" required placeholder="Mumbai">
-            </label>
-            <label>State *
-              <input type="text" name="state" required placeholder="Maharashtra">
-            </label>
-            <label>PIN Code *
-              <input type="text" name="pin_code" required placeholder="400001">
-            </label>
-            <label>Financial Year Start
-              <select name="financial_year_start_month">
-                <option value="4" selected>April (Standard Indian FY)</option>
-                <option value="1">January (Calendar Year)</option>
-              </select>
-            </label>
-            <label>Currency & Tax
-              <select name="currency">
-                <option value="INR" selected>INR (₹) · Indian GST</option>
-                <option value="USD">USD ($) · Standard Sales Tax</option>
-              </select>
-            </label>
-            <label class="col-span-2">Account Password (10+ characters) *
-              <input type="password" name="password" required placeholder="••••••••••••" minlength="10">
-            </label>
-            <div class="col-span-2" style="margin-top:6px;">
-              <label style="display:block;font-weight:700;margin-bottom:6px;font-size:12.5px;color:#334155;">Company / Business Brand Logo (Optional)</label>
-              <div class="logo-upload-card">
-                <div id="signupLogoPreviewWrap" class="logo-preview-box">
-                  <span id="signupLogoPlaceholder">🏢</span>
-                  <img id="signupLogoPreviewImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;" alt="Preview">
+        <div class="signup-wizard-wrap">
+          <!-- Stepper Header -->
+          <div class="signup-stepper">
+            <div class="signup-stepper-progress">
+              <div class="signup-stepper-bar" id="stepperBar"></div>
+            </div>
+            
+            <button type="button" class="signup-step-item active" id="stepIndicator1" onclick="goToStep(1)">
+              <div class="signup-step-bubble">1</div>
+              <span class="signup-step-title">Business</span>
+            </button>
+            
+            <button type="button" class="signup-step-item" id="stepIndicator2" onclick="goToStep(2)">
+              <div class="signup-step-bubble">2</div>
+              <span class="signup-step-title">Contact & Address</span>
+            </button>
+            
+            <button type="button" class="signup-step-item" id="stepIndicator3" onclick="goToStep(3)">
+              <div class="signup-step-bubble">3</div>
+              <span class="signup-step-title">Security & Logo</span>
+            </button>
+          </div>
+
+          <form id="signupForm" method="POST" action="/api/auth/signup">
+            <!-- STEP 1: BUSINESS PROFILE -->
+            <div class="signup-step-pane active" id="stepPane1">
+              <div class="signup-section-banner">
+                <strong><span>🏢</span> Business Entity Details</strong>
+                <span>Step 1 of 3</span>
+              </div>
+
+              <div class="form-grid-2col">
+                <div class="auth-input-group in-grid col-span-full">
+                  <label>Business Legal Name *</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">🏢</span>
+                    <input type="text" name="business_name" id="bizNameInp" required placeholder="e.g. Acme Horizon Technologies Pvt Ltd" autofocus>
+                  </div>
                 </div>
-                <div style="flex:1;">
-                  <label style="padding:6px 14px;font-size:12px;display:inline-block;cursor:pointer;margin:0 0 6px 0;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:7px;font-weight:700;color:#334155;">
-                    📁 Choose Brand Logo
-                    <input type="file" id="signupLogoFileInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
-                  </label>
-                  <input type="hidden" name="logo_url" id="signupLogoHidden">
-                  <div style="font-size:11px;color:#64748b;">PNG, JPG or WEBP (up to 2MB). Automatically displayed on GST invoices & workspace.</div>
+
+                <div class="auth-input-group in-grid">
+                  <label>Business Structure / Entity *</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">🏷️</span>
+                    <select name="business_type" required>
+                      <option value="Private Limited" selected>Private Limited (Pvt Ltd)</option>
+                      <option value="Proprietorship">Proprietorship</option>
+                      <option value="Partnership">Partnership Firm</option>
+                      <option value="Public Limited">Public Limited</option>
+                      <option value="LLP">Limited Liability Partnership (LLP)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="auth-input-group in-grid">
+                  <label>GSTIN Number <small style="color:#64748b;font-weight:400;">(Optional)</small></label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">🧾</span>
+                    <input type="text" name="gstin" placeholder="27AABCR1234F1Z5 (15 digits)" maxlength="15" style="text-transform:uppercase;">
+                  </div>
+                </div>
+
+                <div class="auth-input-group in-grid">
+                  <label>Currency & Tax Regime</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">₹</span>
+                    <select name="currency">
+                      <option value="INR" selected>INR (₹) · Indian GST System</option>
+                      <option value="USD">USD ($) · Standard Sales Tax</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="auth-input-group in-grid">
+                  <label>Financial Year Start</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">📅</span>
+                    <select name="financial_year_start_month">
+                      <option value="4" selected>April (Standard Indian FY)</option>
+                      <option value="1">January (Calendar Year)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
+
+              <div class="signup-nav-row" style="justify-content:flex-end;">
+                <button type="button" class="btn-wizard-next" onclick="nextStep(1)">
+                  <span>Continue to Owner Details</span> <span>→</span>
+                </button>
+              </div>
             </div>
-          </div>
-          <div class="consent-box">
-            <label>
-              <input type="checkbox" name="consent" required>
-              <span>I agree to the Terms of Service. I understand that my business registration enters <strong>PENDING APPROVAL</strong> status and will be verified by a Platform Administrator before activation.</span>
-            </label>
-          </div>
-          <button type="submit" class="btn-signup-submit" id="signupSubmitBtn">
-            <span>→</span> Submit Business for Verification
-          </button>
-        </form>
-        <p class="muted-note">Already registered? <a href="/login" class="text-link">Sign in here →</a></p>
+
+            <!-- STEP 2: OWNER & CONTACT DETAILS -->
+            <div class="signup-step-pane" id="stepPane2">
+              <div class="signup-section-banner">
+                <strong><span>👤</span> Owner & Workspace Location</strong>
+                <span>Step 2 of 3</span>
+              </div>
+
+              <div class="form-grid-2col">
+                <div class="auth-input-group in-grid col-span-full">
+                  <label>Owner / Authorized Person Name *</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">👤</span>
+                    <input type="text" name="owner_name" id="ownerNameInp" required placeholder="e.g. Raushan Maurya">
+                  </div>
+                </div>
+
+                <div class="auth-input-group in-grid">
+                  <label>Work Email Address *</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">✉️</span>
+                    <input type="email" name="email" id="workEmailInp" required placeholder="contact@acme.com">
+                  </div>
+                </div>
+
+                <div class="auth-input-group in-grid">
+                  <label>Mobile Number *</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">📱</span>
+                    <input type="tel" name="mobile" id="mobileInp" required placeholder="9876543210" maxlength="15">
+                  </div>
+                </div>
+
+                <div class="auth-input-group in-grid col-span-full">
+                  <label>Business Registered Address *</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">📍</span>
+                    <input type="text" name="address_line" id="addressInp" required placeholder="Suite 401, Trade Tower, Commercial Area">
+                  </div>
+                </div>
+
+                <div class="auth-input-group in-grid">
+                  <label>City *</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">🏙️</span>
+                    <input type="text" name="city" id="cityInp" required placeholder="e.g. Mumbai">
+                  </div>
+                </div>
+
+                <div class="auth-input-group in-grid">
+                  <label>State *</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">🗺️</span>
+                    <input type="text" name="state" id="stateInp" required placeholder="e.g. Maharashtra">
+                  </div>
+                </div>
+
+                <div class="auth-input-group in-grid col-span-full">
+                  <label>PIN Code *</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">📮</span>
+                    <input type="text" name="pin_code" id="pinInp" required placeholder="400001" maxlength="10">
+                  </div>
+                </div>
+              </div>
+
+              <div class="signup-nav-row">
+                <button type="button" class="btn-wizard-prev" onclick="prevStep(2)">
+                  <span>←</span> <span>Back</span>
+                </button>
+                <button type="button" class="btn-wizard-next" onclick="nextStep(2)">
+                  <span>Continue to Security & Logo</span> <span>→</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 3: SECURITY & BRANDING -->
+            <div class="signup-step-pane" id="stepPane3">
+              <div class="signup-section-banner">
+                <strong><span>🔒</span> Account Password & Branding</strong>
+                <span>Step 3 of 3</span>
+              </div>
+
+              <div class="form-grid-1col">
+                <div class="auth-input-group in-grid">
+                  <label>Master Account Password * <small style="color:#64748b;font-weight:400;">(Min 10 characters)</small></label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">🔒</span>
+                    <input type="password" name="password" id="signupPassInp" required placeholder="Create a strong master password" minlength="10" autocomplete="new-password">
+                    <button type="button" class="auth-input-toggle" onclick="toggleSignupPass(this)" aria-label="Toggle password view">👁</button>
+                  </div>
+                  <div class="password-strength-bar">
+                    <div class="password-strength-segment" id="pStr1"></div>
+                    <div class="password-strength-segment" id="pStr2"></div>
+                    <div class="password-strength-segment" id="pStr3"></div>
+                  </div>
+                  <small id="passHint" style="display:block;margin-top:4px;font-size:11px;color:#64748b;">Must contain at least 10 characters.</small>
+                </div>
+
+                <div class="auth-input-group in-grid">
+                  <label>Company / Brand Logo <small style="color:#64748b;font-weight:400;">(Optional)</small></label>
+                  <div class="logo-upload-card">
+                    <div id="signupLogoPreviewWrap" class="logo-preview-box">
+                      <span id="signupLogoPlaceholder">🏢</span>
+                      <img id="signupLogoPreviewImg" src="" style="display:none;" alt="Preview">
+                    </div>
+                    <div style="flex:1;">
+                      <label style="padding:6px 14px;font-size:12px;display:inline-block;cursor:pointer;margin:0 0 6px 0;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:7px;font-weight:700;color:#334155;">
+                        📁 Choose Brand Logo
+                        <input type="file" id="signupLogoFileInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
+                      </label>
+                      <input type="hidden" name="logo_url" id="signupLogoHidden">
+                      <div style="font-size:11px;color:#64748b;">PNG, JPG or WEBP (up to 2MB). Automatically displayed on GST tax invoices & workspace.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="consent-box">
+                  <label>
+                    <input type="checkbox" name="consent" id="consentCheck" required>
+                    <span>I agree to the Terms of Service. I understand that my business registration enters <strong>PENDING APPROVAL</strong> status and will be verified by a Platform Administrator before activation.</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="signup-nav-row">
+                <button type="button" class="btn-wizard-prev" onclick="prevStep(3)">
+                  <span>←</span> <span>Back</span>
+                </button>
+                <button type="submit" class="btn-signup-submit" id="signupSubmitBtn">
+                  <span>🚀</span> <span>Complete Registration & Submit</span>
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <p class="muted-note">Already registered? <a href="/login" class="text-link">Sign in to your workspace →</a></p>
+        </div>
+
         <script>
+          let currentStep = 1;
+
+          function updateStepperUI(step) {
+            currentStep = step;
+            document.querySelectorAll('.signup-step-pane').forEach((pane, idx) => {
+              pane.classList.toggle('active', idx + 1 === step);
+            });
+            [1, 2, 3].forEach(s => {
+              const el = document.getElementById('stepIndicator' + s);
+              if (!el) return;
+              el.classList.remove('active', 'completed');
+              if (s === step) el.classList.add('active');
+              else if (s < step) el.classList.add('completed');
+            });
+            const bar = document.getElementById('stepperBar');
+            if (bar) {
+              const pct = step === 1 ? 33.33 : (step === 2 ? 66.66 : 100);
+              bar.style.width = pct + '%';
+            }
+          }
+
+          function validateStep(step) {
+            if (step === 1) {
+              const biz = document.getElementById('bizNameInp');
+              if (!biz || !biz.value.trim()) {
+                if (biz) { biz.focus(); biz.style.borderColor = '#ef4444'; }
+                alert('Please enter your Business Legal Name.');
+                return false;
+              }
+              biz.style.borderColor = '';
+              return true;
+            }
+            if (step === 2) {
+              const owner = document.getElementById('ownerNameInp');
+              const email = document.getElementById('workEmailInp');
+              const mobile = document.getElementById('mobileInp');
+              const addr = document.getElementById('addressInp');
+              const city = document.getElementById('cityInp');
+              const state = document.getElementById('stateInp');
+              const pin = document.getElementById('pinInp');
+
+              const fields = [
+                { el: owner, msg: 'Please enter Owner / Authorized Person Name.' },
+                { el: email, msg: 'Please enter Work Email Address.' },
+                { el: mobile, msg: 'Please enter Mobile Number.' },
+                { el: addr, msg: 'Please enter Business Registered Address.' },
+                { el: city, msg: 'Please enter City.' },
+                { el: state, msg: 'Please enter State.' },
+                { el: pin, msg: 'Please enter PIN Code.' }
+              ];
+              for (const f of fields) {
+                if (!f.el || !f.el.value.trim()) {
+                  if (f.el) { f.el.focus(); f.el.style.borderColor = '#ef4444'; }
+                  alert(f.msg);
+                  return false;
+                }
+                f.el.style.borderColor = '';
+              }
+              return true;
+            }
+            return true;
+          }
+
+          function nextStep(current) {
+            if (!validateStep(current)) return;
+            updateStepperUI(current + 1);
+          }
+
+          function prevStep(current) {
+            updateStepperUI(current - 1);
+          }
+
+          function goToStep(target) {
+            if (target < currentStep) {
+              updateStepperUI(target);
+            } else if (target > currentStep) {
+              for (let s = currentStep; s < target; s++) {
+                if (!validateStep(s)) return;
+              }
+              updateStepperUI(target);
+            }
+          }
+
+          function toggleSignupPass(btn) {
+            const inp = document.getElementById('signupPassInp');
+            if (!inp) return;
+            if (inp.type === 'password') {
+              inp.type = 'text';
+              btn.textContent = '🙈';
+            } else {
+              inp.type = 'password';
+              btn.textContent = '👁';
+            }
+          }
+
+          const passInp = document.getElementById('signupPassInp');
+          const p1 = document.getElementById('pStr1');
+          const p2 = document.getElementById('pStr2');
+          const p3 = document.getElementById('pStr3');
+          const pHint = document.getElementById('passHint');
+          if (passInp) {
+            passInp.addEventListener('input', function() {
+              const val = this.value;
+              p1.className = 'password-strength-segment';
+              p2.className = 'password-strength-segment';
+              p3.className = 'password-strength-segment';
+              if (val.length === 0) {
+                pHint.textContent = 'Must contain at least 10 characters.';
+                pHint.style.color = '#64748b';
+              } else if (val.length < 10) {
+                p1.classList.add('active-weak');
+                pHint.textContent = 'Too short (' + val.length + '/10 characters)';
+                pHint.style.color = '#ef4444';
+              } else {
+                p1.classList.add('active-medium');
+                p2.classList.add('active-medium');
+                if (/[0-9]/.test(val) && /[^A-Za-z0-9]/.test(val)) {
+                  p1.className = 'password-strength-segment active-strong';
+                  p2.className = 'password-strength-segment active-strong';
+                  p3.className = 'password-strength-segment active-strong';
+                  pHint.textContent = '✓ Strong password';
+                  pHint.style.color = '#10b981';
+                } else {
+                  pHint.textContent = 'Good. Add numbers & symbols for maximum strength.';
+                  pHint.style.color = '#f59e0b';
+                }
+              }
+            });
+          }
+
           const logoInput = document.getElementById('signupLogoFileInput');
           if (logoInput) {
             logoInput.addEventListener('change', function(e) {
