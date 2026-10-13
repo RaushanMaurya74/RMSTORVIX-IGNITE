@@ -410,7 +410,7 @@ function renderAuthPage({ title, formContent, alertMessage = null, alertType = '
   <link rel="icon" type="image/png" href="/assets/images/favicon.png">
   <link rel="stylesheet" href="/assets/css/auth.css">
 </head>
-<body class="auth-split-body">
+<body class="auth-split-body ${isSignup ? 'is-signup' : ''}">
 <div class="auth-container">
   <!-- LEFT HERO PANEL (MATCHING IMAGE 2) -->
   <aside class="auth-hero">
@@ -1534,7 +1534,7 @@ async function handleRequest(req, res) {
       isSignup: true,
       formContent: `
         <div class="signup-wizard-wrap">
-          <!-- Stepper Header -->
+          <!-- 4-Page Compact Stepper Header -->
           <div class="signup-stepper">
             <div class="signup-stepper-progress">
               <div class="signup-stepper-bar" id="stepperBar"></div>
@@ -1547,29 +1547,37 @@ async function handleRequest(req, res) {
             
             <button type="button" class="signup-step-item" id="stepIndicator2" onclick="goToStep(2)">
               <div class="signup-step-bubble">2</div>
-              <span class="signup-step-title">Contact & Address</span>
+              <span class="signup-step-title">Owner</span>
             </button>
             
             <button type="button" class="signup-step-item" id="stepIndicator3" onclick="goToStep(3)">
               <div class="signup-step-bubble">3</div>
-              <span class="signup-step-title">Security & Logo</span>
+              <span class="signup-step-title">Location</span>
+            </button>
+
+            <button type="button" class="signup-step-item" id="stepIndicator4" onclick="goToStep(4)">
+              <div class="signup-step-bubble">4</div>
+              <span class="signup-step-title">Security</span>
             </button>
           </div>
 
           <form id="signupForm" method="POST" action="/api/auth/signup">
-            <!-- STEP 1: BUSINESS PROFILE -->
+            <input type="hidden" name="currency" value="INR">
+            <input type="hidden" name="financial_year_start_month" value="4">
+
+            <!-- PAGE 1: BUSINESS PROFILE -->
             <div class="signup-step-pane active" id="stepPane1">
               <div class="signup-section-banner">
-                <strong><span>🏢</span> Business Entity Details</strong>
-                <span>Step 1 of 3</span>
+                <strong><span>🏢</span> Business Entity Profile</strong>
+                <span>Page 1 of 4</span>
               </div>
 
-              <div class="form-grid-2col">
-                <div class="auth-input-group in-grid col-span-full">
+              <div class="form-grid-1col">
+                <div class="auth-input-group in-grid">
                   <label>Business Legal Name *</label>
                   <div class="auth-input-wrap">
                     <span class="auth-input-icon">🏢</span>
-                    <input type="text" name="business_name" id="bizNameInp" required placeholder="e.g. Acme Horizon Technologies Pvt Ltd" autofocus>
+                    <input type="text" name="business_name" id="bizNameInp" required placeholder="e.g. Acme Horizon Pvt Ltd" autofocus>
                   </div>
                 </div>
 
@@ -1594,28 +1602,6 @@ async function handleRequest(req, res) {
                     <input type="text" name="gstin" placeholder="27AABCR1234F1Z5 (15 digits)" maxlength="15" style="text-transform:uppercase;">
                   </div>
                 </div>
-
-                <div class="auth-input-group in-grid">
-                  <label>Currency & Tax Regime</label>
-                  <div class="auth-input-wrap">
-                    <span class="auth-input-icon">₹</span>
-                    <select name="currency">
-                      <option value="INR" selected>INR (₹) · Indian GST System</option>
-                      <option value="USD">USD ($) · Standard Sales Tax</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="auth-input-group in-grid">
-                  <label>Financial Year Start</label>
-                  <div class="auth-input-wrap">
-                    <span class="auth-input-icon">📅</span>
-                    <select name="financial_year_start_month">
-                      <option value="4" selected>April (Standard Indian FY)</option>
-                      <option value="1">January (Calendar Year)</option>
-                    </select>
-                  </div>
-                </div>
               </div>
 
               <div class="signup-nav-row" style="justify-content:flex-end;">
@@ -1625,15 +1611,15 @@ async function handleRequest(req, res) {
               </div>
             </div>
 
-            <!-- STEP 2: OWNER & CONTACT DETAILS -->
+            <!-- PAGE 2: OWNER & CONTACT -->
             <div class="signup-step-pane" id="stepPane2">
               <div class="signup-section-banner">
-                <strong><span>👤</span> Owner & Workspace Location</strong>
-                <span>Step 2 of 3</span>
+                <strong><span>👤</span> Owner & Contact Details</strong>
+                <span>Page 2 of 4</span>
               </div>
 
-              <div class="form-grid-2col">
-                <div class="auth-input-group in-grid col-span-full">
+              <div class="form-grid-1col">
+                <div class="auth-input-group in-grid">
                   <label>Owner / Authorized Person Name *</label>
                   <div class="auth-input-wrap">
                     <span class="auth-input-icon">👤</span>
@@ -1656,32 +1642,53 @@ async function handleRequest(req, res) {
                     <input type="tel" name="mobile" id="mobileInp" required placeholder="9876543210" maxlength="15">
                   </div>
                 </div>
+              </div>
 
-                <div class="auth-input-group in-grid col-span-full">
+              <div class="signup-nav-row">
+                <button type="button" class="btn-wizard-prev" onclick="prevStep(2)">
+                  <span>←</span> <span>Back</span>
+                </button>
+                <button type="button" class="btn-wizard-next" onclick="nextStep(2)">
+                  <span>Continue to Location</span> <span>→</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- PAGE 3: REGISTERED LOCATION -->
+            <div class="signup-step-pane" id="stepPane3">
+              <div class="signup-section-banner">
+                <strong><span>📍</span> Business Location & Address</strong>
+                <span>Page 3 of 4</span>
+              </div>
+
+              <div class="form-grid-1col">
+                <div class="auth-input-group in-grid">
                   <label>Business Registered Address *</label>
                   <div class="auth-input-wrap">
                     <span class="auth-input-icon">📍</span>
-                    <input type="text" name="address_line" id="addressInp" required placeholder="Suite 401, Trade Tower, Commercial Area">
+                    <input type="text" name="address_line" id="addressInp" required placeholder="Suite 401, Trade Tower">
+                  </div>
+                </div>
+
+                <div class="form-grid-2col" style="gap:10px;">
+                  <div class="auth-input-group in-grid">
+                    <label>City *</label>
+                    <div class="auth-input-wrap">
+                      <span class="auth-input-icon">🏙️</span>
+                      <input type="text" name="city" id="cityInp" required placeholder="Mumbai">
+                    </div>
+                  </div>
+
+                  <div class="auth-input-group in-grid">
+                    <label>State *</label>
+                    <div class="auth-input-wrap">
+                      <span class="auth-input-icon">🗺️</span>
+                      <input type="text" name="state" id="stateInp" required placeholder="Maharashtra">
+                    </div>
                   </div>
                 </div>
 
                 <div class="auth-input-group in-grid">
-                  <label>City *</label>
-                  <div class="auth-input-wrap">
-                    <span class="auth-input-icon">🏙️</span>
-                    <input type="text" name="city" id="cityInp" required placeholder="e.g. Mumbai">
-                  </div>
-                </div>
-
-                <div class="auth-input-group in-grid">
-                  <label>State *</label>
-                  <div class="auth-input-wrap">
-                    <span class="auth-input-icon">🗺️</span>
-                    <input type="text" name="state" id="stateInp" required placeholder="e.g. Maharashtra">
-                  </div>
-                </div>
-
-                <div class="auth-input-group in-grid col-span-full">
                   <label>PIN Code *</label>
                   <div class="auth-input-wrap">
                     <span class="auth-input-icon">📮</span>
@@ -1691,20 +1698,20 @@ async function handleRequest(req, res) {
               </div>
 
               <div class="signup-nav-row">
-                <button type="button" class="btn-wizard-prev" onclick="prevStep(2)">
+                <button type="button" class="btn-wizard-prev" onclick="prevStep(3)">
                   <span>←</span> <span>Back</span>
                 </button>
-                <button type="button" class="btn-wizard-next" onclick="nextStep(2)">
-                  <span>Continue to Security & Logo</span> <span>→</span>
+                <button type="button" class="btn-wizard-next" onclick="nextStep(3)">
+                  <span>Continue to Security</span> <span>→</span>
                 </button>
               </div>
             </div>
 
-            <!-- STEP 3: SECURITY & BRANDING -->
-            <div class="signup-step-pane" id="stepPane3">
+            <!-- PAGE 4: SECURITY & ACTIVATION -->
+            <div class="signup-step-pane" id="stepPane4">
               <div class="signup-section-banner">
-                <strong><span>🔒</span> Account Password & Branding</strong>
-                <span>Step 3 of 3</span>
+                <strong><span>🔒</span> Password & Business Logo</strong>
+                <span>Page 4 of 4</span>
               </div>
 
               <div class="form-grid-1col">
@@ -1712,7 +1719,7 @@ async function handleRequest(req, res) {
                   <label>Master Account Password * <small style="color:#64748b;font-weight:400;">(Min 10 characters)</small></label>
                   <div class="auth-input-wrap">
                     <span class="auth-input-icon">🔒</span>
-                    <input type="password" name="password" id="signupPassInp" required placeholder="Create a strong master password" minlength="10" autocomplete="new-password">
+                    <input type="password" name="password" id="signupPassInp" required placeholder="Create a strong password" minlength="10" autocomplete="new-password">
                     <button type="button" class="auth-input-toggle" onclick="toggleSignupPass(this)" aria-label="Toggle password view">👁</button>
                   </div>
                   <div class="password-strength-bar">
@@ -1725,36 +1732,36 @@ async function handleRequest(req, res) {
 
                 <div class="auth-input-group in-grid">
                   <label>Company / Brand Logo <small style="color:#64748b;font-weight:400;">(Optional)</small></label>
-                  <div class="logo-upload-card">
-                    <div id="signupLogoPreviewWrap" class="logo-preview-box">
+                  <div class="logo-upload-card" style="padding:10px 12px;gap:12px;">
+                    <div id="signupLogoPreviewWrap" class="logo-preview-box" style="width:42px;height:42px;font-size:20px;">
                       <span id="signupLogoPlaceholder">🏢</span>
                       <img id="signupLogoPreviewImg" src="" style="display:none;" alt="Preview">
                     </div>
                     <div style="flex:1;">
-                      <label style="padding:6px 14px;font-size:12px;display:inline-block;cursor:pointer;margin:0 0 6px 0;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:7px;font-weight:700;color:#334155;">
-                        📁 Choose Brand Logo
+                      <label style="padding:5px 12px;font-size:11.5px;display:inline-block;cursor:pointer;margin:0 0 4px 0;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:7px;font-weight:700;color:#334155;">
+                        📁 Upload Logo
                         <input type="file" id="signupLogoFileInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
                       </label>
                       <input type="hidden" name="logo_url" id="signupLogoHidden">
-                      <div style="font-size:11px;color:#64748b;">PNG, JPG or WEBP (up to 2MB). Automatically displayed on GST tax invoices & workspace.</div>
+                      <div style="font-size:10.5px;color:#64748b;">PNG, JPG, WEBP (under 2MB). Shown on invoices.</div>
                     </div>
                   </div>
                 </div>
 
-                <div class="consent-box">
+                <div class="consent-box" style="margin-top:8px;padding:10px 12px;">
                   <label>
                     <input type="checkbox" name="consent" id="consentCheck" required>
-                    <span>I agree to the Terms of Service. I understand that my business registration enters <strong>PENDING APPROVAL</strong> status and will be verified by a Platform Administrator before activation.</span>
+                    <span>I agree to terms. My registration will be verified by a Platform Administrator before activation.</span>
                   </label>
                 </div>
               </div>
 
               <div class="signup-nav-row">
-                <button type="button" class="btn-wizard-prev" onclick="prevStep(3)">
+                <button type="button" class="btn-wizard-prev" onclick="prevStep(4)">
                   <span>←</span> <span>Back</span>
                 </button>
                 <button type="submit" class="btn-signup-submit" id="signupSubmitBtn">
-                  <span>🚀</span> <span>Complete Registration & Submit</span>
+                  <span>🚀</span> <span>Complete Registration</span>
                 </button>
               </div>
             </div>
@@ -1766,12 +1773,12 @@ async function handleRequest(req, res) {
         <script>
           let currentStep = 1;
 
-          function updateStepperUI(step) {
+          function updateStepperUI(step, skipHash) {
             currentStep = step;
             document.querySelectorAll('.signup-step-pane').forEach((pane, idx) => {
               pane.classList.toggle('active', idx + 1 === step);
             });
-            [1, 2, 3].forEach(s => {
+            [1, 2, 3, 4].forEach(s => {
               const el = document.getElementById('stepIndicator' + s);
               if (!el) return;
               el.classList.remove('active', 'completed');
@@ -1780,8 +1787,11 @@ async function handleRequest(req, res) {
             });
             const bar = document.getElementById('stepperBar');
             if (bar) {
-              const pct = step === 1 ? 33.33 : (step === 2 ? 66.66 : 100);
+              const pct = step === 1 ? 25 : (step === 2 ? 50 : (step === 3 ? 75 : 100));
               bar.style.width = pct + '%';
+            }
+            if (!skipHash && history.replaceState) {
+              history.replaceState(null, '', '#page-' + step);
             }
           }
 
@@ -1800,15 +1810,29 @@ async function handleRequest(req, res) {
               const owner = document.getElementById('ownerNameInp');
               const email = document.getElementById('workEmailInp');
               const mobile = document.getElementById('mobileInp');
+
+              const fields = [
+                { el: owner, msg: 'Please enter Owner / Authorized Person Name.' },
+                { el: email, msg: 'Please enter Work Email Address.' },
+                { el: mobile, msg: 'Please enter Mobile Number.' }
+              ];
+              for (const f of fields) {
+                if (!f.el || !f.el.value.trim()) {
+                  if (f.el) { f.el.focus(); f.el.style.borderColor = '#ef4444'; }
+                  alert(f.msg);
+                  return false;
+                }
+                f.el.style.borderColor = '';
+              }
+              return true;
+            }
+            if (step === 3) {
               const addr = document.getElementById('addressInp');
               const city = document.getElementById('cityInp');
               const state = document.getElementById('stateInp');
               const pin = document.getElementById('pinInp');
 
               const fields = [
-                { el: owner, msg: 'Please enter Owner / Authorized Person Name.' },
-                { el: email, msg: 'Please enter Work Email Address.' },
-                { el: mobile, msg: 'Please enter Mobile Number.' },
                 { el: addr, msg: 'Please enter Business Registered Address.' },
                 { el: city, msg: 'Please enter City.' },
                 { el: state, msg: 'Please enter State.' },
@@ -1821,6 +1845,20 @@ async function handleRequest(req, res) {
                   return false;
                 }
                 f.el.style.borderColor = '';
+              }
+              return true;
+            }
+            if (step === 4) {
+              const pass = document.getElementById('signupPassInp');
+              const check = document.getElementById('consentCheck');
+              if (!pass || pass.value.length < 10) {
+                if (pass) { pass.focus(); pass.style.borderColor = '#ef4444'; }
+                alert('Password must be at least 10 characters long.');
+                return false;
+              }
+              if (!check || !check.checked) {
+                alert('Please accept terms to complete registration.');
+                return false;
               }
               return true;
             }
@@ -1846,6 +1884,22 @@ async function handleRequest(req, res) {
               updateStepperUI(target);
             }
           }
+
+          window.addEventListener('hashchange', () => {
+            const m = window.location.hash.match(/#page-(\d+)/);
+            if (m) {
+              const p = parseInt(m[1], 10);
+              if (p >= 1 && p <= 4) updateStepperUI(p, true);
+            }
+          });
+
+          document.addEventListener('DOMContentLoaded', () => {
+            const m = window.location.hash.match(/#page-(\d+)/);
+            if (m) {
+              const p = parseInt(m[1], 10);
+              if (p >= 1 && p <= 4) updateStepperUI(p, true);
+            }
+          });
 
           function toggleSignupPass(btn) {
             const inp = document.getElementById('signupPassInp');

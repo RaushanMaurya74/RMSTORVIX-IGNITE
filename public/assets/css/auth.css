@@ -583,10 +583,30 @@ body.auth-split-body {
 }
 
 /* ========================================================
-   MODERN INTERACTIVE MULTI-STEP SIGNUP WIZARD
+   MODERN INTERACTIVE MULTI-STEP SIGNUP WIZARD (Compact)
    ======================================================== */
+body.is-signup .hero-mockup-wrapper {
+  display: none;
+}
+body.is-signup .auth-hero {
+  padding: 36px 40px;
+}
+body.is-signup .auth-form-side {
+  padding: 28px 20px;
+}
+body.is-signup .auth-card-clean {
+  padding: 24px 26px;
+}
+body.is-signup .auth-card-header {
+  margin-bottom: 14px;
+}
+body.is-signup .auth-card-header h2 {
+  font-size: 20px;
+  margin-bottom: 3px;
+}
+
 .auth-form-wide {
-  max-width: 580px;
+  max-width: 480px;
   width: 100%;
 }
 
@@ -594,17 +614,17 @@ body.auth-split-body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
   position: relative;
-  padding: 0 10px;
+  padding: 0 4px;
 }
 
 .signup-stepper-progress {
   position: absolute;
-  top: 18px;
-  left: 36px;
-  right: 36px;
-  height: 3px;
+  top: 15px;
+  left: 20px;
+  right: 20px;
+  height: 2.5px;
   background: var(--auth-line, #e2e8f0);
   z-index: 1;
   border-radius: 2px;
@@ -614,7 +634,7 @@ body.auth-split-body {
   height: 100%;
   background: linear-gradient(90deg, #ff5722 0%, #2563eb 100%);
   transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  width: 33.33%;
+  width: 25%;
   border-radius: 2px;
 }
 
@@ -624,7 +644,7 @@ body.auth-split-body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   cursor: pointer;
   background: transparent;
   border: none;
@@ -634,18 +654,18 @@ body.auth-split-body {
 }
 
 .signup-step-bubble {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #ffffff;
   border: 2px solid var(--auth-line, #cbd5e1);
   color: #64748b;
   display: grid;
   place-items: center;
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 800;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
 }
 
 .signup-step-item.active .signup-step-bubble {
