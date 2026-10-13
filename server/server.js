@@ -2564,11 +2564,26 @@ async function handleRequest(req, res) {
     </div>
 
     <footer class="inv-footer">
-      <div class="inv-sign">
-        <p>For <strong>${escapeHtml(currentBusiness.business_name)}</strong></p>
-        <br><br>
-        <p>Authorized Signatory</p>
-      </div>
+      ${currentBusiness.enable_digital_signature ? `
+        <div class="inv-sign-block">
+          <p class="sign-biz-name">For <strong>${escapeHtml(currentBusiness.business_name)}</strong></p>
+          <div class="sign-images-wrap">
+            ${currentBusiness.company_seal_data ? `<img src="${currentBusiness.company_seal_data}" class="inv-seal-img" alt="Official Seal">` : ''}
+            ${currentBusiness.digital_signature_data ? `<img src="${currentBusiness.digital_signature_data}" class="inv-sig-img" alt="Digital Signature">` : '<div style="height:45px;"></div>'}
+          </div>
+          <div class="signatory-details">
+            <strong>${escapeHtml(currentBusiness.signatory_name || currentBusiness.owner_name)}</strong>
+            <span>${escapeHtml(currentBusiness.signatory_designation || 'Authorized Signatory')}</span>
+            ${currentBusiness.signature_date_enabled ? `<small class="sign-verified-badge">🛡️ Digitally Signed on ${escapeHtml(invoice.invoice_date)}</small>` : ''}
+          </div>
+        </div>
+      ` : `
+        <div class="inv-sign">
+          <p>For <strong>${escapeHtml(currentBusiness.business_name)}</strong></p>
+          <br><br>
+          <p>Authorized Signatory</p>
+        </div>
+      `}
     </footer>
   </div>
 </body>
@@ -3030,7 +3045,7 @@ async function handleRequest(req, res) {
   // GET /payments
   if (pathname === '/payments' && method === 'GET') {
     const html = renderShell({
-      title: 'Payments & Receipts',
+      title: 'Payments & Vouchers',
       activeNav: 'payments',
       user: sessionUser,
       business: currentBusiness,
@@ -3038,7 +3053,7 @@ async function handleRequest(req, res) {
         <section class="page-heading">
           <div>
             <p class="eyebrow">TREASURY & CASH FLOW</p>
-            <h1>Payments & Receipts <span>₹</span></h1>
+            <h1>Payments & Vouchers <span>₹</span></h1>
             <p class="subheading">Customer payment collections (F6) and supplier payment vouchers (F5).</p>
           </div>
           <div class="heading-actions">
@@ -3311,8 +3326,8 @@ async function handleRequest(req, res) {
     return sendJson(res, 200, tb);
   }
 
-  // GET /api/accounting/pnl
-  if (pathname === '/api/accounting/pnl' && method === 'GET') {
+  // GET /api/accounting/pnl or /profit-loss
+  if ((pathname === '/api/accounting/pnl' || pathname === '/api/accounting/profit-loss') && method === 'GET') {
     const pnl = getProfitAndLoss(currentBusinessId);
     return sendJson(res, 200, pnl);
   }
@@ -3323,8 +3338,8 @@ async function handleRequest(req, res) {
     return sendJson(res, 200, bs);
   }
 
-  // GET /api/accounting/day-book
-  if (pathname === '/api/accounting/day-book' && method === 'GET') {
+  // GET /api/accounting/day-book or /daybook
+  if ((pathname === '/api/accounting/day-book' || pathname === '/api/accounting/daybook') && method === 'GET') {
     const queryDate = parsedUrl.query.date || null;
     const entries = getDayBook(currentBusinessId, queryDate);
     return sendJson(res, 200, { entries });
@@ -3641,7 +3656,109 @@ async function handleRequest(req, res) {
               </label>
             </div>
             <br>
-            <button type="submit" class="button button-primary">Save Changes</button>
+            <button type="submit" class="button button-primary">Save Business Details</button>
+          </form>
+        </section>
+
+        <!-- DIGITAL SIGNATURE & OFFICIAL STAMP SECTION -->
+        <section class="panel mt-4" id="digitalSignatureSection">
+          <div class="panel-heading">
+            <div>
+              <h2>Digital Signature & Official Stamp 🖋️</h2>
+              <p>Upload or draw your authorized signature and company seal to automatically sign GST tax invoices and vouchers.</p>
+            </div>
+            <span class="pill ${currentBusiness.enable_digital_signature ? 'paid' : 'pending'}" id="sigStatusBadge">
+              ${currentBusiness.enable_digital_signature ? '✓ Active on Invoices' : 'Disabled'}
+            </span>
+          </div>
+
+          <form id="digitalSignatureForm">
+            <div class="form-grid">
+              <label>Authorized Signatory Name *
+                <input type="text" name="signatory_name" id="signatoryNameInput" value="${escapeHtml(currentBusiness.signatory_name || currentBusiness.owner_name || '')}" placeholder="e.g. Raushan Maurya" required>
+              </label>
+              <label>Signatory Designation / Role *
+                <input type="text" name="signatory_designation" id="signatoryDesigInput" value="${escapeHtml(currentBusiness.signatory_designation || 'Authorized Signatory')}" placeholder="e.g. Managing Director / Proprietor" required>
+              </label>
+              <div class="col-span-2" style="display:flex;gap:24px;flex-wrap:wrap;margin:4px 0 10px;">
+                <label style="display:inline-flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;">
+                  <input type="checkbox" name="enable_digital_signature" id="enableSigCheck" ${currentBusiness.enable_digital_signature ? 'checked' : ''}>
+                  Enable Digital Signature & Stamp on Invoices
+                </label>
+                <label style="display:inline-flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;">
+                  <input type="checkbox" name="signature_date_enabled" id="enableSigDateCheck" ${currentBusiness.signature_date_enabled ? 'checked' : ''}>
+                  Include "Digitally Signed" Statutory Verification Date
+                </label>
+              </div>
+            </div>
+
+            <div class="sig-settings-grid">
+              <!-- Digital Signature Pad / Upload -->
+              <div class="sig-pad-card">
+                <h3><span>✍️</span> Authorized Digital Signature</h3>
+                <p class="muted-note" style="margin:0 0 8px;">Draw your official signature below or upload a clear transparent image.</p>
+                <div class="sig-canvas-wrap">
+                  <canvas id="sigPadCanvas" class="sig-canvas" width="450" height="150"></canvas>
+                  <span class="sig-canvas-hint">Sign above with mouse / touch</span>
+                </div>
+                <div class="sig-actions-row">
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <button type="button" class="button button-secondary" id="clearSigBtn" style="padding:6px 12px;font-size:11px;">🧹 Clear</button>
+                    <label class="button button-secondary" style="padding:6px 12px;font-size:11px;cursor:pointer;margin:0;">
+                      📁 Upload PNG/JPG
+                      <input type="file" id="sigUploadInput" accept="image/png,image/jpeg,image/svg+xml" style="display:none;">
+                    </label>
+                  </div>
+                  <small id="sigStatusNote" style="color:#64748b;font-size:11px;">${currentBusiness.digital_signature_data ? '✓ Signature stored' : 'No signature recorded'}</small>
+                </div>
+                <input type="hidden" name="digital_signature_data" id="digitalSignatureDataInput" value="${escapeHtml(currentBusiness.digital_signature_data || '')}">
+              </div>
+
+              <!-- Official Rubber Stamp / Seal -->
+              <div class="sig-pad-card">
+                <h3><span>⭕</span> Company Rubber Stamp / Seal</h3>
+                <p class="muted-note" style="margin:0 0 8px;">Upload official company seal/stamp to display alongside the signature.</p>
+                <div class="seal-upload-box">
+                  <div class="seal-preview-circle" id="sealPreviewWrap">
+                    ${currentBusiness.company_seal_data ? `<img src="${currentBusiness.company_seal_data}" id="sealImgPreview" alt="Seal">` : '<span style="font-size:26px;color:#94a3b8;">⭕</span>'}
+                  </div>
+                  <div class="seal-upload-meta">
+                    <label class="button button-secondary" style="padding:8px 14px;font-size:12px;cursor:pointer;display:inline-block;margin-bottom:8px;">
+                      📁 Select Seal Image (PNG)
+                      <input type="file" id="sealUploadInput" accept="image/png,image/jpeg,image/svg+xml" style="display:none;">
+                    </label>
+                    <div style="display:flex;gap:8px;">
+                      <button type="button" class="button button-secondary" id="removeSealBtn" style="padding:4px 10px;font-size:11px;">✕ Remove Seal</button>
+                    </div>
+                    <small style="display:block;margin-top:6px;color:#64748b;font-size:10px;">Recommended: Transparent PNG, circular or oval seal</small>
+                  </div>
+                </div>
+                <input type="hidden" name="company_seal_data" id="companySealDataInput" value="${escapeHtml(currentBusiness.company_seal_data || '')}">
+
+                <!-- Live Invoice Preview Box -->
+                <div style="margin-top:14px;">
+                  <strong style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Live Tax Invoice Sign-off Preview</strong>
+                  <div class="sig-live-preview-box" id="sigLivePreviewBox">
+                    <div class="preview-biz">For <strong>${escapeHtml(currentBusiness.business_name)}</strong></div>
+                    <div class="preview-images">
+                      <img src="${currentBusiness.company_seal_data || ''}" id="previewLiveSeal" class="preview-seal" style="${currentBusiness.company_seal_data ? '' : 'display:none;'}" alt="Seal Preview">
+                      <img src="${currentBusiness.digital_signature_data || ''}" id="previewLiveSig" class="preview-sig" style="${currentBusiness.digital_signature_data ? '' : 'display:none;'}" alt="Signature Preview">
+                    </div>
+                    <div class="preview-signatory">
+                      <strong id="previewLiveName">${escapeHtml(currentBusiness.signatory_name || currentBusiness.owner_name)}</strong>
+                      <small id="previewLiveDesig">${escapeHtml(currentBusiness.signatory_designation || 'Authorized Signatory')}</small>
+                      <small id="previewLiveBadge" style="color:#166534;font-weight:600;margin-top:2px;display:block;">🛡️ Digitally Signed & Verified</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:18px;">
+              <button type="submit" class="button button-primary" id="saveSignatureBtn" style="padding:10px 24px;font-size:13px;font-weight:700;">
+                💾 Save Digital Signature & Stamp Settings
+              </button>
+            </div>
           </form>
         </section>
 
@@ -3663,7 +3780,11 @@ async function handleRequest(req, res) {
   // POST /api/settings
   if (pathname === '/api/settings' && method === 'POST') {
     const body = await parseBody(req);
-    const { business_name, owner_name, gstin, invoice_prefix, address_line, city, state, pin_code } = body;
+    const {
+      business_name, owner_name, gstin, invoice_prefix, address_line, city, state, pin_code,
+      signatory_name, signatory_designation, enable_digital_signature, signature_date_enabled,
+      digital_signature_data, company_seal_data
+    } = body;
 
     let validGstin = currentBusiness.gstin;
     if (gstin && gstin.trim()) {
@@ -3674,22 +3795,56 @@ async function handleRequest(req, res) {
     db.prepare(`
       UPDATE businesses
       SET business_name = ?, owner_name = ?, gstin = ?, invoice_prefix = ?,
-          address_line = ?, city = ?, state = ?, pin_code = ?
+          address_line = ?, city = ?, state = ?, pin_code = ?,
+          signatory_name = ?, signatory_designation = ?,
+          enable_digital_signature = ?, signature_date_enabled = ?,
+          digital_signature_data = CASE WHEN ? IS NOT NULL THEN ? ELSE digital_signature_data END,
+          company_seal_data = CASE WHEN ? IS NOT NULL THEN ? ELSE company_seal_data END
       WHERE id = ?
     `).run(
       business_name || currentBusiness.business_name,
       owner_name || currentBusiness.owner_name,
       validGstin,
       invoice_prefix || 'INV',
-      address_line || '',
-      city || '',
-      state || '',
-      pin_code || '',
+      address_line !== undefined ? address_line : (currentBusiness.address_line || ''),
+      city !== undefined ? city : (currentBusiness.city || ''),
+      state !== undefined ? state : (currentBusiness.state || ''),
+      pin_code !== undefined ? pin_code : (currentBusiness.pin_code || ''),
+      signatory_name !== undefined ? signatory_name : (currentBusiness.signatory_name || currentBusiness.owner_name),
+      signatory_designation !== undefined ? signatory_designation : (currentBusiness.signatory_designation || 'Authorized Signatory'),
+      enable_digital_signature !== undefined ? (enable_digital_signature ? 1 : 0) : currentBusiness.enable_digital_signature,
+      signature_date_enabled !== undefined ? (signature_date_enabled ? 1 : 0) : currentBusiness.signature_date_enabled,
+      digital_signature_data !== undefined ? digital_signature_data : null,
+      digital_signature_data !== undefined ? digital_signature_data : null,
+      company_seal_data !== undefined ? company_seal_data : null,
+      company_seal_data !== undefined ? company_seal_data : null,
       currentBusinessId
     );
 
+    // Sync updates to Supabase Cloud Database (PostgreSQL 17)
+    try {
+      const { SUPABASE_URL, SUPABASE_ANON_KEY } = require('./supabase');
+      fetch(`${SUPABASE_URL}/rest/v1/businesses?id=eq.${currentBusinessId}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          business_name: business_name || currentBusiness.business_name,
+          owner_name: owner_name || currentBusiness.owner_name,
+          gstin: validGstin,
+          invoice_prefix: invoice_prefix || 'INV',
+          signatory_name: signatory_name !== undefined ? signatory_name : currentBusiness.signatory_name,
+          signatory_designation: signatory_designation !== undefined ? signatory_designation : currentBusiness.signatory_designation,
+          enable_digital_signature: enable_digital_signature !== undefined ? !!enable_digital_signature : true
+        })
+      }).catch(() => {});
+    } catch (e) {}
+
     logAudit(sessionUser.user_id, currentBusinessId, 'SETTINGS_UPDATED', 'BUSINESS', currentBusinessId, req);
-    return sendJson(res, 200, { success: true, message: 'Settings updated successfully.' });
+    return sendJson(res, 200, { success: true, message: 'Settings and Digital Signature updated successfully.' });
   }
 
   // GET /api/backup/export

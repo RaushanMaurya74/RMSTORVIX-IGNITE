@@ -26,6 +26,12 @@ CREATE TABLE IF NOT EXISTS businesses (
   approved_by BIGINT,
   approved_at TIMESTAMPTZ,
   rejection_reason TEXT,
+  digital_signature_data TEXT,
+  company_seal_data TEXT,
+  signatory_name VARCHAR(190),
+  signatory_designation VARCHAR(100),
+  enable_digital_signature BOOLEAN NOT NULL DEFAULT true,
+  signature_date_enabled BOOLEAN NOT NULL DEFAULT true,
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP

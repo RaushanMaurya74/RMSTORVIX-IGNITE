@@ -190,6 +190,64 @@ body {
   text-align: center;
   font-size: 11px;
 }
+.inv-sign-block {
+  text-align: right;
+  min-width: 260px;
+}
+.sign-biz-name {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: #101b36;
+}
+.sign-images-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  min-height: 65px;
+  margin: 6px 0;
+}
+.inv-seal-img {
+  max-height: 65px;
+  max-width: 90px;
+  object-fit: contain;
+  opacity: 0.92;
+}
+.inv-sig-img {
+  max-height: 60px;
+  max-width: 150px;
+  object-fit: contain;
+}
+.signatory-details {
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.signatory-details strong {
+  font-size: 12px;
+  color: #0f172a;
+}
+.signatory-details span {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.sign-verified-badge {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 9px;
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
 @media print {
   body {
     background: white;

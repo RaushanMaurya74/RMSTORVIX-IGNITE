@@ -28,6 +28,12 @@ CREATE TABLE IF NOT EXISTS businesses (
   approved_by INTEGER,
   approved_at TEXT,
   rejection_reason TEXT,
+  digital_signature_data TEXT,
+  company_seal_data TEXT,
+  signatory_name TEXT,
+  signatory_designation TEXT,
+  enable_digital_signature INTEGER NOT NULL DEFAULT 1,
+  signature_date_enabled INTEGER NOT NULL DEFAULT 1,
   is_active INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))

@@ -49,6 +49,18 @@ function initSchema(db) {
     const schemaSql = fs.readFileSync(schemaFile, 'utf8');
     db.exec(schemaSql);
   }
+
+  const migrations = [
+    'ALTER TABLE businesses ADD COLUMN digital_signature_data TEXT;',
+    'ALTER TABLE businesses ADD COLUMN company_seal_data TEXT;',
+    'ALTER TABLE businesses ADD COLUMN signatory_name TEXT;',
+    'ALTER TABLE businesses ADD COLUMN signatory_designation TEXT;',
+    'ALTER TABLE businesses ADD COLUMN enable_digital_signature INTEGER DEFAULT 1;',
+    'ALTER TABLE businesses ADD COLUMN signature_date_enabled INTEGER DEFAULT 1;'
+  ];
+  for (const m of migrations) {
+    try { db.exec(m); } catch (e) { /* column exists */ }
+  }
 }
 
 let txDepth = 0;

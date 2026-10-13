@@ -1673,6 +1673,247 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 18.2 DIGITAL SIGNATURE & OFFICIAL STAMP ENGINE
+  const sigCanvas = document.getElementById('sigPadCanvas');
+  const sigDataInput = document.getElementById('digitalSignatureDataInput');
+  const sealDataInput = document.getElementById('companySealDataInput');
+  const digitalSigForm = document.getElementById('digitalSignatureForm');
+  const sigStatusBadge = document.getElementById('sigStatusBadge');
+  const previewLiveSig = document.getElementById('previewLiveSig');
+  const previewLiveSeal = document.getElementById('previewLiveSeal');
+  const previewLiveName = document.getElementById('previewLiveName');
+  const previewLiveDesig = document.getElementById('previewLiveDesig');
+  const previewLiveBadge = document.getElementById('previewLiveBadge');
+
+  if (sigCanvas) {
+    const ctx = sigCanvas.getContext('2d');
+    let isDrawing = false;
+    let hasDrawn = false;
+
+    // Initialize line styles
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0f172a';
+
+    // If pre-existing signature data exists, draw it onto the canvas
+    if (sigDataInput && sigDataInput.value) {
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = sigDataInput.value;
+    }
+
+    function getPos(e) {
+      const rect = sigCanvas.getBoundingClientRect();
+      const scaleX = sigCanvas.width / rect.width;
+      const scaleY = sigCanvas.height / rect.height;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
+    }
+
+    function startDraw(e) {
+      e.preventDefault();
+      isDrawing = true;
+      hasDrawn = true;
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
+
+    function stopDraw(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+      isDrawing = false;
+      const dataUrl = sigCanvas.toDataURL('image/png');
+      if (sigDataInput) sigDataInput.value = dataUrl;
+      if (previewLiveSig) {
+        previewLiveSig.src = dataUrl;
+        previewLiveSig.style.display = 'block';
+      }
+      const note = document.getElementById('sigStatusNote');
+      if (note) note.textContent = '✓ Drawn signature ready';
+    }
+
+    sigCanvas.addEventListener('mousedown', startDraw);
+    sigCanvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', stopDraw);
+
+    sigCanvas.addEventListener('touchstart', startDraw, { passive: false });
+    sigCanvas.addEventListener('touchmove', draw, { passive: false });
+    window.addEventListener('touchend', stopDraw);
+
+    // Clear Canvas Button
+    const clearSigBtn = document.getElementById('clearSigBtn');
+    if (clearSigBtn) {
+      clearSigBtn.addEventListener('click', () => {
+        ctx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+        hasDrawn = false;
+        if (sigDataInput) sigDataInput.value = '';
+        if (previewLiveSig) {
+          previewLiveSig.src = '';
+          previewLiveSig.style.display = 'none';
+        }
+        const note = document.getElementById('sigStatusNote');
+        if (note) note.textContent = 'Cleared';
+      });
+    }
+
+    // Upload Signature File
+    const sigUploadInput = document.getElementById('sigUploadInput');
+    if (sigUploadInput) {
+      sigUploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const img = new Image();
+          img.onload = () => {
+            ctx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+            const hRatio = sigCanvas.width / img.width;
+            const vRatio = sigCanvas.height / img.height;
+            const ratio = Math.min(hRatio, vRatio, 1);
+            const centerShiftX = (sigCanvas.width - img.width * ratio) / 2;
+            const centerShiftY = (sigCanvas.height - img.height * ratio) / 2;
+            ctx.drawImage(img, 0, 0, img.width, img.height, centerShiftX, centerShiftY, img.width * ratio, img.height * ratio);
+            const dataUrl = sigCanvas.toDataURL('image/png');
+            if (sigDataInput) sigDataInput.value = dataUrl;
+            if (previewLiveSig) {
+              previewLiveSig.src = dataUrl;
+              previewLiveSig.style.display = 'block';
+            }
+            const note = document.getElementById('sigStatusNote');
+            if (note) note.textContent = '✓ Image uploaded & ready';
+          };
+          img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Upload Company Seal/Stamp
+    const sealUploadInput = document.getElementById('sealUploadInput');
+    const sealPreviewWrap = document.getElementById('sealPreviewWrap');
+    if (sealUploadInput) {
+      sealUploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const dataUrl = evt.target.result;
+          if (sealDataInput) sealDataInput.value = dataUrl;
+          if (sealPreviewWrap) sealPreviewWrap.innerHTML = `<img src="${dataUrl}" id="sealImgPreview" alt="Seal">`;
+          if (previewLiveSeal) {
+            previewLiveSeal.src = dataUrl;
+            previewLiveSeal.style.display = 'block';
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Remove Seal
+    const removeSealBtn = document.getElementById('removeSealBtn');
+    if (removeSealBtn) {
+      removeSealBtn.addEventListener('click', () => {
+        if (sealDataInput) sealDataInput.value = '';
+        if (sealPreviewWrap) sealPreviewWrap.innerHTML = '<span style="font-size:26px;color:#94a3b8;">⭕</span>';
+        if (previewLiveSeal) {
+          previewLiveSeal.src = '';
+          previewLiveSeal.style.display = 'none';
+        }
+      });
+    }
+
+    // Live typing updates for Name & Designation
+    const signatoryNameInput = document.getElementById('signatoryNameInput');
+    const signatoryDesigInput = document.getElementById('signatoryDesigInput');
+    const enableSigCheck = document.getElementById('enableSigCheck');
+    const enableSigDateCheck = document.getElementById('enableSigDateCheck');
+
+    if (signatoryNameInput && previewLiveName) {
+      signatoryNameInput.addEventListener('input', () => {
+        previewLiveName.textContent = signatoryNameInput.value.trim() || 'Authorized Signatory';
+      });
+    }
+    if (signatoryDesigInput && previewLiveDesig) {
+      signatoryDesigInput.addEventListener('input', () => {
+        previewLiveDesig.textContent = signatoryDesigInput.value.trim() || 'Authorized Signatory';
+      });
+    }
+    if (enableSigCheck) {
+      enableSigCheck.addEventListener('change', () => {
+        if (sigStatusBadge) {
+          sigStatusBadge.className = enableSigCheck.checked ? 'pill paid' : 'pill pending';
+          sigStatusBadge.textContent = enableSigCheck.checked ? '✓ Active on Invoices' : 'Disabled';
+        }
+      });
+    }
+    if (enableSigDateCheck && previewLiveBadge) {
+      enableSigDateCheck.addEventListener('change', () => {
+        previewLiveBadge.style.display = enableSigDateCheck.checked ? 'block' : 'none';
+      });
+    }
+
+    // Submit Digital Signature Form
+    if (digitalSigForm) {
+      digitalSigForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('saveSignatureBtn');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span>⏳</span> Saving Signature & Stamp...';
+        }
+
+        try {
+          if (hasDrawn && sigDataInput) {
+            sigDataInput.value = sigCanvas.toDataURL('image/png');
+          }
+
+          const payload = {
+            signatory_name: signatoryNameInput ? signatoryNameInput.value : '',
+            signatory_designation: signatoryDesigInput ? signatoryDesigInput.value : '',
+            enable_digital_signature: enableSigCheck ? enableSigCheck.checked : true,
+            signature_date_enabled: enableSigDateCheck ? enableSigDateCheck.checked : true,
+            digital_signature_data: sigDataInput ? sigDataInput.value : '',
+            company_seal_data: sealDataInput ? sealDataInput.value : ''
+          };
+
+          const res = await fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed to save digital signature');
+
+          alert('✓ Digital Signature and Official Stamp settings saved successfully!');
+        } catch (err) {
+          alert('Error: ' + err.message);
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '💾 Save Digital Signature & Stamp Settings';
+          }
+        }
+      });
+    }
+  }
+
   const exportBackupBtn = document.getElementById('exportDataBackupBtn');
   if (exportBackupBtn) {
     exportBackupBtn.addEventListener('click', () => {
